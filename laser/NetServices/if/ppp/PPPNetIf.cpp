@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -73,37 +73,37 @@ PPPErr PPPNetIf::GPRSConnect(const char* apn, const char* userId, const char* pa
   LwipNetIf::init();
   pppInit();
   //TODO: Tell ATIf that we get ownership of the serial port
-    
+
   GPRSErr gprsErr;
   gprsErr = m_pIf->connect(apn);
   if(gprsErr)
     return PPP_NETWORK;
-    
-  DBG("PPPNetIf: If Connected.\n");
+
+  DBG("PPPNetIf: If Connected.\r\n");
 
   if( userId == NULL )
     pppSetAuth(PPPAUTHTYPE_NONE, NULL, NULL);
   else
     pppSetAuth(PPPAUTHTYPE_PAP, userId, password); //TODO: Allow CHAP as well
-    
-  DBG("PPPNetIf: Set Auth.\n");
-  
+
+  DBG("PPPNetIf: Set Auth.\r\n");
+
   //wait(1.);
-  
+
   //m_pIf->flushBuffer(); //Flush buffer before passing serial port to PPP
-  
+
   m_status = PPP_CONNECTING;
-  DBG("m_pIf = %p\n", m_pIf);
+  DBG("m_pIf = %p\r\n", m_pIf);
   int res = pppOverSerialOpen((void*)m_pIf, sPppCallback, (void*)this);
-  DBG("PPP connected\n");
+  DBG("PPP connected\r\n");
   if(res<0)
   {
     disconnect();
     return PPP_PROTOCOL;
   }
-  
-  DBG("PPPNetIf: PPP Started with res = %d.\n", res);
-  
+
+  DBG("PPPNetIf: PPP Started with res = %d.\r\n", res);
+
   m_fd = res;
   m_connected = true;
   Timer t;
@@ -113,20 +113,20 @@ PPPErr PPPNetIf::GPRSConnect(const char* apn, const char* userId, const char* pa
     poll();
     if(t.read_ms()>PPP_TIMEOUT)
     {
-      DBG("PPPNetIf: Timeout.\n");  
+      DBG("PPPNetIf: Timeout.\r\n");
       disconnect();
       return PPP_PROTOCOL;
     }
   }
-  
-  DBG("PPPNetIf: Callback returned.\n");
-  
+
+  DBG("PPPNetIf: Callback returned.\r\n");
+
   if( m_status == PPP_DISCONNECTED )
   {
     disconnect();
     return PPP_PROTOCOL;
   }
-  
+
   return PPP_OK;
 
 }
@@ -142,17 +142,17 @@ PPPErr PPPNetIf::disconnect()
   if(m_fd)
     pppClose(m_fd); //0 if ok, else should gen a WARN
   m_connected = false;
-  
+
   m_pIf->flushBuffer();
   m_pIf->printf("+++\r\n");
   wait(.5);
   m_pIf->flushBuffer();
-  
-  GPRSErr gprsErr;  
+
+  GPRSErr gprsErr;
   gprsErr = m_pIf->disconnect();
   if(gprsErr)
     return PPP_NETWORK;
-    
+
   return PPP_OK;
 }
 
@@ -215,7 +215,7 @@ void PPPNetIf::pppCallback(int errCode, void *arg)
       break;
     default:
       //Disconnected
-      DBG("PPPNetIf: Callback errCode = %d.\n", errCode);
+      DBG("PPPNetIf: Callback errCode = %d.\r\n", errCode);
       m_status = PPP_DISCONNECTED;
     break;
   }

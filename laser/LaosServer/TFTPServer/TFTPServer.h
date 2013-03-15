@@ -1,6 +1,6 @@
 /**
  * TFTPServer.h
- * Simple TFTP server 
+ * Simple TFTP server
  *
  * Copyright (c) 2011 Jaap Vermaas
  *
@@ -28,7 +28,7 @@
  * http://spectral.mscs.mu.edu/RFC/rfc1350.html
  *
  * Example:
- * @code 
+ * @code
  * TFTPServer *srv;
  * ...
  * srv = new TFTPServer();
@@ -47,14 +47,14 @@
 #include "UDPSocket.h"      // http://mbed.org/users/donatien/programs/EthernetNetIf
 
 #define TFTP_PORT 69
-//#define TFTP_DEBUG(x) printf("%s\n\r", x);
+//#define TFTP_DEBUG(x) printf("%s\r\n", x);
 
-enum TFTPServerState { listen, reading, writing, error, suspended, deleted }; 
+enum TFTPServerState { listen, reading, writing, error, suspended, deleted };
 
 class TFTPServer {
 
 public:
-    // create a new tftp server, with file directory dir and 
+    // create a new tftp server, with file directory dir and
     // listening on port
     TFTPServer(char* dir, int myport = TFTP_PORT);
     // destroy this instance of the tftp server

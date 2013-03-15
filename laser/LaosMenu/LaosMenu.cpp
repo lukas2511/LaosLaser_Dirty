@@ -39,7 +39,7 @@ static const char *menus[] = {
 };
 
 static const char *screens[] = {
-    //0: main, navigate to  MOVE, FOCUS, HOME, ORIGIN, START JOB, IP, 
+    //0: main, navigate to  MOVE, FOCUS, HOME, ORIGIN, START JOB, IP,
     // DELETE JOB, POWER
 #define STARTUP (0)
     "$$$$$$$$$$$$$$$$"
@@ -53,7 +53,11 @@ static const char *screens[] = {
     "RUN:            "
     "$$$$$$$$$$$$$$$$",
 
-#define DELETE (RUN+1)
+#define SIMULATE (RUN+1)
+    "SIMULATE:       "
+    "$$$$$$$$$$$$$$$$",
+
+#define DELETE (SIMULATE+1)
     "DELETE:         "
     "$$$$$$$$$$$$$$$$",
 
@@ -106,7 +110,11 @@ static const char *screens[] = {
     "RUNNING...      "
     "[cancel]        ",
 
-#define BUSY (RUNNING+1)
+#define SIMULATING (RUNNING+1)
+    "SIMULATING...   "
+    "[cancel]        ",
+
+#define BUSY (SIMULATING+1)
     "BUSY: $$$$$$$$$$"
     "[cancel][ok]    ",
 
@@ -177,7 +185,7 @@ void LaosMenu::SetScreen(char *msg) {
 
 /**
 *** Handle menu system
-*** Read keys, and plan next action on the screen, output screen if 
+*** Read keys, and plan next action on the screen, output screen if
 *** something changed
 **/
 void LaosMenu::Handle() {
@@ -185,18 +193,18 @@ void LaosMenu::Handle() {
     extern LaosFileSystem sd;
     extern LaosMotion *mot;
     static int count=0;
-    
+
     int c = dsp->read();
     if ( count++ > 10) count = 0; // screen refresh counter (refresh once every 10 cycles(
-    
+
     if ( c ) timeout = 10;  // keypress timeout counter
     else if ( timeout ) timeout--;
-    
+
     if ( screen != prevscreen ) waitup = 1; // after a screen change: wait for a key release, mask current keypress
-    if ( waitup && timeout) // if we have to wait for key-up, 
+    if ( waitup && timeout) // if we have to wait for key-up,
         c = 0;                 // cancel the keypress
     if ( waitup && !timeout ) waitup=0;
-    
+
     if ( !timeout )  // increase speed if we keep button pressed longer
         speed = 3;
     else {
@@ -227,12 +235,25 @@ void LaosMenu::Handle() {
                 sarg = (char*)menus[menu];
                 args[0] = menu;
                 break;
-                
+
             case RUN: // START JOB select job to run
-                if (strlen(jobname) == 0) getprevjob(jobname); 
+                if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
                     case K_OK: screen=RUNNING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+                    case K_RIGHT: screen=SIMULATE; waitup=1; break;
+                    case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
+                    case K_CANCEL: screen=1; waitup = 1; break;
+                }
+                sarg = (char *)&jobname;
+                break;
+
+            case SIMULATE: // SIMULATE JOB select job to simulate
+                if (strlen(jobname) == 0) getprevjob(jobname);
+                switch ( c ) {
+                    case K_OK: screen=SIMULATING; break;
+                    case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+                    case K_LEFT: screen=RUN; waitup=1; break;
                     case K_RIGHT: screen=DELETE; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
@@ -246,12 +267,12 @@ void LaosMenu::Handle() {
                         break; // INSERT: delete current job
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
-                    case K_LEFT: screen=RUN; waitup=1; break;
+                    case K_LEFT: screen=SIMULATE; waitup=1; break;
                     case K_CANCEL: screen=lastscreen; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
                 break;
-                
+
             case MOVE: // pos xy
                 mot->getPosition(&x, &y, &z);
                 xt = x; yt= y;
@@ -261,16 +282,16 @@ void LaosMenu::Handle() {
                     case K_LEFT: x-=100*speed; break;
                     case K_RIGHT: x+=100*speed;  break;
                     case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
-                    case K_FUP: screen=FOCUS; break; 
+                    case K_FUP: screen=FOCUS; break;
                     case K_FDOWN: screen=FOCUS; break;
                     case K_ORIGIN: screen=ORIGIN; break;
                 }
                 if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
                     mot->moveTo(x, y, z, speed/2);
-					printf("Move: %d %d %d %d\n", x,y,z, speed);
+					printf("Move: %d %d %d %d\r\n", x,y,z, speed);
                 } else {
-                    // if (! mot->ready()) 
-                    // printf("Buffer vol\n");
+                    // if (! mot->ready())
+                    // printf("Buffer vol\r\n");
                 }
                 args[0]=x-xoff;
                 args[1]=y-yoff;
@@ -290,10 +311,10 @@ void LaosMenu::Handle() {
                     case 0: break;
                     default: screen=MAIN; waitup=1; break;
                 }
-                if ( mot->ready() && (z!=zt) ) 
+                if ( mot->ready() && (z!=zt) )
 				{
                   mot->moveTo(x, y, z, speed);
-				  printf("Move: %d %d %d %d\n", x,y,z, speed);
+				  printf("Move: %d %d %d %d\r\n", x,y,z, speed);
 				}
                 args[0]=z-zoff;
                 break;
@@ -311,8 +332,8 @@ void LaosMenu::Handle() {
                     case K_OK:
                     case K_ORIGIN:
                         xoff = x;
-                        yoff = y; 
-                        zoff = z; 
+                        yoff = y;
+                        zoff = z;
                         mot->setOrigin(x,y,z);
                         screen = lastscreen;
                         waitup = 1;
@@ -323,11 +344,11 @@ void LaosMenu::Handle() {
             case DELETE_ALL: // Delete all files
                 switch ( c ) {
                     case K_OK: // delete current job
-                        cleandir(); 
-                        screen=MAIN; 
-                        waitup = 1; 
+                        cleandir();
+                        screen=MAIN;
+                        waitup = 1;
                         strcpy(jobname, "");
-                        break; 
+                        break;
                     case K_CANCEL: screen=MAIN; waitup = 1; break;
                 }
                 break;
@@ -336,8 +357,8 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_RIGHT: ipfield++; waitup=1; break;
                     case K_LEFT: ipfield--; waitup=1; break;
-                    case K_OK: screen=MAIN; menu=MAIN; break; 
-                    case K_CANCEL: screen=MAIN; menu=MAIN; break; 
+                    case K_OK: screen=MAIN; menu=MAIN; break;
+                    case K_CANCEL: screen=MAIN; menu=MAIN; break;
                 }
                 ipfield %= 4;
                 sarg = (char*)ipfields[ipfield];
@@ -359,7 +380,7 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_RIGHT: iofield++; waitup=1; break;
                     case K_LEFT: iofield--; waitup=1; break;
-                    case K_OK: screen=lastscreen; break; 
+                    case K_OK: screen=lastscreen; break;
                     case K_CANCEL: screen=lastscreen; break;
                 }
                 iofield %= sizeof(iofields)/sizeof(char*);
@@ -372,7 +393,7 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_RIGHT: powerfield++; waitup=1; break;
                     case K_LEFT: powerfield--; waitup=1; break;
-                    case K_UP: power[powerfield % 4] += speed; break; 
+                    case K_UP: power[powerfield % 4] += speed; break;
                     case K_DOWN: power[powerfield % 4] -= speed; break;
                     case K_OK: screen=lastscreen; break;
                     case K_CANCEL: screen=lastscreen; break;
@@ -386,8 +407,18 @@ void LaosMenu::Handle() {
             case HOMING: // Homing screen
                 x = cfg->xhome;
                 y = cfg->yhome;
+                z = cfg->zhome;
                 while ( !mot->isStart() );
+                printf("disable safety...\r\n");
+                mot->overrideSafety(true);
                 mot->home(cfg->xhome,cfg->yhome,cfg->zhome);
+                mot->getPosition(&x, &y, &z);
+                while(!mot->ready());
+                printf("resting...\r\n");
+                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+                printf("resting finished...\r\n");
+                printf("reenable safety...\r\n");
+                mot->overrideSafety(false);
                 screen=lastscreen;
                 break;
 
@@ -402,13 +433,43 @@ void LaosMenu::Handle() {
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
-                            if (! runfile) 
+                            if (! runfile)
                               screen=MAIN;
                             else
                                mot->reset();
                         } else {
                             while ((!feof(runfile)) && mot->ready())
                                 mot->write(readint(runfile));
+                            if (feof(runfile) && mot->ready()) {
+                                fclose(runfile);
+                                runfile = NULL;
+                                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+                                screen=MAIN;
+                            } else {
+                                nodisplay = 1;
+                            }
+                        }
+                }
+                break;
+
+            case SIMULATING: // Screen while simulating
+                switch ( c ) {
+                    /* case K_CANCEL:
+                        while (mot->queue());
+                        mot->reset();
+                        if (runfile != NULL) fclose(runfile);
+                        runfile=NULL; screen=MAIN; menu=MAIN;
+                        break; */
+                    default:
+                        if (runfile == NULL) {
+                            runfile = sd.openfile(jobname, "rb");
+                            if (! runfile)
+                              screen=MAIN;
+                            else
+                               mot->reset();
+                        } else {
+                            while ((!feof(runfile)) && mot->ready())
+                                mot->simulate(readint(runfile));
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;

@@ -1,17 +1,17 @@
 #pragma diag_remark 177
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,7 +57,7 @@ THE SOFTWARE.
 #define ntohl( x ) (htonl(x))
 
 MySQLClient::MySQLClient() : NetService(false) /*Not owned by the pool*/, m_pCbItem(NULL), m_pCbMeth(NULL), m_pCb(NULL),
-m_pTCPSocket(NULL), m_watchdog(), m_timeout(MYSQL_TIMEOUT_MS*1000), m_pDnsReq(NULL), m_closed(true), 
+m_pTCPSocket(NULL), m_watchdog(), m_timeout(MYSQL_TIMEOUT_MS*1000), m_pDnsReq(NULL), m_closed(true),
 m_host(), m_user(), m_password(), m_db(), m_state(MYSQL_CLOSED)
 {
   m_buf = new byte[BUF_SIZE];
@@ -81,7 +81,7 @@ MySQLResult MySQLClient::open(Host& host, const string& user, const string& pass
 }
 
 #if 0 //Ref only
-template<class T> 
+template<class T>
 MySQLResult MySQLClient::open(Host& host, const string& user, const string& password, const string& db, T* pItem, void (T::*pMethod)(MySQLResult)) //Non blocking
 {
   setOnResult(pItem, pMethod);
@@ -104,7 +104,7 @@ MySQLResult MySQLClient::exit()
   close();
   return MYSQL_OK;
 }
-  
+
 void MySQLClient::setOnResult( void (*pMethod)(MySQLResult) )
 {
   m_pCb = pMethod;
@@ -113,7 +113,7 @@ void MySQLClient::setOnResult( void (*pMethod)(MySQLResult) )
 }
 
 #if 0 //Ref only
-template<class T> 
+template<class T>
 void MySQLClient::setOnResult( T* pItem, void (T::*pMethod)(MySQLResult) )
 {
   m_pCb = NULL;
@@ -183,10 +183,10 @@ void MySQLClient::setup(Host& host, const string& user, const string& password, 
   m_host = host;
   if(!host.getPort())
     host.setPort( MYSQL_PORT ); //Default port
-    
+
   m_user = user;
   m_password = password;
-  
+
   m_db = db;
 
   if( !host.getIp().isNull() )
@@ -195,18 +195,18 @@ void MySQLClient::setup(Host& host, const string& user, const string& password, 
   }
   else //Need to do a DNS Query...
   {
-    DBG("DNS Query...\n");
+    DBG("DNS Query...\r\n");
     m_pDnsReq = new DNSRequest();
     m_pDnsReq->setOnReply(this, &MySQLClient::onDNSReply);
     m_pDnsReq->resolve(&m_host);
-    DBG("MySQLClient : DNSRequest %p\n", m_pDnsReq);
+    DBG("MySQLClient : DNSRequest %p\r\n", m_pDnsReq);
   }
 }
 
 void MySQLClient::connect() //Start Connection
 {
   resetTimeout();
-  DBG("Connecting...\n");
+  DBG("Connecting...\r\n");
   m_pTCPSocket->connect(m_host);
   m_packetId = 0;
 }
@@ -216,15 +216,15 @@ void MySQLClient::handleHandshake()
   readData();
   if( ! (( m_len > 1 ) && ( memchr( m_buf + 1, 0, m_len ) != NULL )) )
   {
-    DBG("Connected but could not find pcsz...\n");
+    DBG("Connected but could not find pcsz...\r\n");
     onResult(MYSQL_PRTCL);
     return;
   }
-  
-  DBG("Connected to server: %d bytes read ; Protocol version %d, mysql-%s.\n", m_len, m_buf[0], &m_buf[1]);
-  
+
+  DBG("Connected to server: %d bytes read ; Protocol version %d, mysql-%s.\r\n", m_len, m_buf[0], &m_buf[1]);
+
   m_pPos = (byte*) memchr( (char*)(m_buf + 1), 0, m_len ) + 1;
-  
+
   sendAuth();
 }
 
@@ -233,22 +233,22 @@ void MySQLClient::sendAuth()
   if( m_len - (m_pPos - m_buf) != 44)
   {
     //We only support protocol >= mysql-4.1
-    DBG("Message after pcsz has wrong len (%d != 44)...\n", m_len - (m_pPos - m_buf));
+    DBG("Message after pcsz has wrong len (%d != 44)...\r\n", m_len - (m_pPos - m_buf));
     onResult(MYSQL_PRTCL);
     return;
   }
-   
+
   uint16_t serverFlags = *((uint16_t*)&m_pPos[13]);
-  DBG("Server capabilities are %04X.\n", serverFlags);
-  
+  DBG("Server capabilities are %04X.\r\n", serverFlags);
+
   uint32_t clientFlags = CLIENT_CONNECT_WITH_DB | CLIENT_PROTOCOL_41 | CLIENT_SECURE_CONNECTION | CLIENT_INTERACTIVE;;
-  
+
   //if(serverFlags & CLIENT_LONG_PASSWORD)
-  
-  DBG("Using auth 4.1+\n");
+
+  DBG("Using auth 4.1+\r\n");
   //Encrypt pw using scramble
   byte scramble[20+20]={0};
-  memcpy(scramble, m_pPos+4, 8); 
+  memcpy(scramble, m_pPos+4, 8);
   memcpy(scramble+8, m_pPos+31, 12); // *(m_pPos+43) == 0 (zero-terminated char*)
 
   byte stage1_hash[20] = {0};
@@ -261,10 +261,10 @@ void MySQLClient::sendAuth()
 
   for(int i=0;i<20;i++)
     token[i] = token[i] ^ stage1_hash[i];
-    
+
   clientFlags |= CLIENT_LONG_PASSWORD;
-  
-  DBG("Building response\n"); 
+
+  DBG("Building response\r\n");
   //Build response
 
   //BE
@@ -278,13 +278,13 @@ void MySQLClient::sendAuth()
   memcpy((char*)&m_pPos[1],token,20);
   strcpy((char*)(m_pPos+21),m_db.c_str());
   m_len = 32 + m_user.length() + 1 + 21 + m_db.length() + 1;
-  
+
   //Save first part of scramble in case we need it again
   memcpy(&m_buf[BUF_SIZE-8], scramble, 8);
 
   m_state = MYSQL_AUTH;
-  
-  DBG("Writing data\n"); 
+
+  DBG("Writing data\r\n");
   writeData();
 }
 
@@ -301,7 +301,7 @@ void MySQLClient::handleAuthResult()
   m_watchdog.reset();
   if(m_len<2)
   {
-    DBG("Response too short..\n");
+    DBG("Response too short..\r\n");
     onResult(MYSQL_PRTCL);
     return;
   }
@@ -313,13 +313,13 @@ void MySQLClient::handleAuthResult()
     m_pPos += m_buf[1] +1;
     m_pPos += m_pPos[0];
     m_pPos += 1;
-    DBG("(OK) : Server status %d, Message : %s\n", *((uint16_t*)&m_pPos[0]), m_pPos+4);
+    DBG("(OK) : Server status %d, Message : %s\r\n", *((uint16_t*)&m_pPos[0]), m_pPos+4);
     onResult(MYSQL_OK);
   }
   else
   {
     m_buf[m_len] = 0;
-    DBG("(Error %d) : %s\n", *((uint16_t*)&m_buf[1]), &m_buf[9]); //LE
+    DBG("(Error %d) : %s\r\n", *((uint16_t*)&m_buf[1]), &m_buf[9]); //LE
     onResult(MYSQL_AUTHFAILED);
     return;
   }
@@ -328,20 +328,20 @@ void MySQLClient::handleAuthResult()
 
 void MySQLClient::sendAuth323()
 {
-  DBG("Using auth 4.0-\n");
+  DBG("Using auth 4.0-\r\n");
   byte scramble[8]={0};
-  
+
   memcpy(scramble, &m_buf[BUF_SIZE-8], 8); //Recover scramble
-  
+
   //memcpy(scramble+8, m_pPos+31, 12); // *(m_pPos+43) == 0 (zero-terminated char*)
-  
+
   byte token[9]={0};
-  
+
   scramble_323((char*)token, (const char*)scramble, m_password.c_str());
-  
-  DBG("Building response\n"); 
+
+  DBG("Building response\r\n");
   //Build response
-  
+
   memcpy((char*)m_buf,token,9);
   m_len = 9;
 
@@ -357,14 +357,14 @@ void MySQLClient::sendAuth323()
   strcpy((char*)(m_pPos+9),m_db.c_str());
   m_len = 32 + m_user.length() + 1 + 9 + m_db.length() + 1;
   #endif
-  
-  DBG("Writing data\n"); 
+
+  DBG("Writing data\r\n");
   writeData();
 }
 
 void MySQLClient::sendCommand(byte command, byte* arg, int len)
 {
-  DBG("Sending command %d, payload of len %d\n", command, len);
+  DBG("Sending command %d, payload of len %d\r\n", command, len);
   m_packetId=0;//Reset packet ID (New sequence)
   m_buf[0] = command;
   memcpy(&m_buf[1], arg, len);
@@ -380,20 +380,20 @@ void MySQLClient::handleCommandResult()
   m_watchdog.reset();
   if(m_len<2)
   {
-    DBG("Response too short..\n");
+    DBG("Response too short..\r\n");
     onResult(MYSQL_PRTCL);
     return;
   }
   DBG("RC=%d ",m_buf[0]);
   if(m_buf[0]==0)
   {
-    DBG("(OK)\n");
+    DBG("(OK)\r\n");
     onResult(MYSQL_OK);
   }
   else
   {
     m_buf[m_len] = 0;
-    DBG("(SQL Error %d) : %s\n", *((uint16_t*)&m_buf[1]), &m_buf[9]); //LE
+    DBG("(SQL Error %d) : %s\r\n", *((uint16_t*)&m_buf[1]), &m_buf[9]); //LE
     onResult(MYSQL_SQL);
     return;
   }
@@ -405,7 +405,7 @@ void MySQLClient::readData() //Copy to buf
   int ret = m_pTCPSocket->recv((char*)head, 4); //Packet header
   m_len = *((uint16_t*)&head[0]);
   m_packetId = head[3];
-  DBG("Packet Id %d of length %d\n", head[3], m_len);
+  DBG("Packet Id %d of length %d\r\n", head[3], m_len);
   m_packetId++;
   if(ret>0)
     ret = m_pTCPSocket->recv((char*)m_buf, m_len);
@@ -416,7 +416,7 @@ void MySQLClient::readData() //Copy to buf
   }
   if(ret < m_len)
   {
-    DBG("WARN: Incomplete packet\n");
+    DBG("WARN: Incomplete packet\r\n");
   }
   m_len = ret;
 }
@@ -426,7 +426,7 @@ void MySQLClient::writeData() //Copy from buf
   byte head[4] = { 0 };
   *((uint16_t*)&head[0]) = m_len;
   head[3] = m_packetId;
-  DBG("Packet Id %d\n", head[3]);
+  DBG("Packet Id %d\r\n", head[3]);
   m_packetId++;
   int ret = m_pTCPSocket->send((char*)head, 4); //Packet header
   if(ret>0)
@@ -441,14 +441,14 @@ void MySQLClient::writeData() //Copy from buf
 
 void MySQLClient::onTCPSocketEvent(TCPSocketEvent e)
 {
-  DBG("Event %d in MySQLClient::onTCPSocketEvent()\n", e);
+  DBG("Event %d in MySQLClient::onTCPSocketEvent()\r\n", e);
 
   if(m_closed)
   {
-    DBG("WARN: Discarded\n");
+    DBG("WARN: Discarded\r\n");
     return;
   }
-  
+
   switch(e)
   {
   case TCPSOCKET_READABLE: //Incoming data
@@ -470,7 +470,7 @@ void MySQLClient::onTCPSocketEvent(TCPSocketEvent e)
   case TCPSOCKET_CONRST:
   case TCPSOCKET_CONABRT:
   case TCPSOCKET_ERROR:
-    DBG("Connection error.\n");
+    DBG("Connection error.\r\n");
     onResult(MYSQL_CONN);
   case TCPSOCKET_DISCONNECTED:
     //There might still be some data available for reading
@@ -479,7 +479,7 @@ void MySQLClient::onTCPSocketEvent(TCPSocketEvent e)
     {
       onResult(MYSQL_CONN);
     }
-    DBG("Connection closed by remote host.\n");
+    DBG("Connection closed by remote host.\r\n");
     break;
   }
 }
@@ -488,18 +488,18 @@ void MySQLClient::onDNSReply(DNSReply r)
 {
   if(m_closed)
   {
-    DBG("WARN: Discarded\n");
+    DBG("WARN: Discarded\r\n");
     return;
   }
-  
+
   if( r != DNS_FOUND )
   {
-    DBG("Could not resolve hostname.\n");
+    DBG("Could not resolve hostname.\r\n");
     onResult(MYSQL_DNS);
     return;
   }
-  
-  DBG("DNS Resolved to %d.%d.%d.%d.\n",m_host.getIp()[0],m_host.getIp()[1],m_host.getIp()[2],m_host.getIp()[3]);
+
+  DBG("DNS Resolved to %d.%d.%d.%d.\r\n",m_host.getIp()[0],m_host.getIp()[1],m_host.getIp()[2],m_host.getIp()[3]);
   //If no error, m_host has been updated by m_pDnsReq so we're set to go !
   m_pDnsReq->close();
   delete m_pDnsReq;
@@ -513,14 +513,14 @@ void MySQLClient::onResult(MySQLResult r) //Called when exchange completed or on
     (m_pCbItem->*m_pCbMeth)(r);
   else if(m_pCb)
     m_pCb(r);
-    
+
   if( (r==MYSQL_DNS) || (r==MYSQL_PRTCL) || (r==MYSQL_AUTHFAILED) || (r==MYSQL_TIMEOUT) || (r==MYSQL_CONN) ) //Fatal error, close connection
     close();
 }
 
 void MySQLClient::onTimeout() //Connection has timed out
 {
-  DBG("Timed out.\n");
+  DBG("Timed out.\r\n");
   onResult(MYSQL_TIMEOUT);
   close();
 }

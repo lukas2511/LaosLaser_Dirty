@@ -1,17 +1,17 @@
 #pragma diag_remark 1464
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -73,11 +73,11 @@ EthernetNetIf::~EthernetNetIf()
     delete m_pNetIf;
     eth_free();
   }
-  
+
   if (m_pDhcp)
     delete m_pDhcp;
 }
-  
+
 EthernetErr EthernetNetIf::setup(int timeout_ms /*= 15000*/)
 {
   if (m_setup)
@@ -102,8 +102,8 @@ EthernetErr EthernetNetIf::setup(int timeout_ms /*= 15000*/)
   }
   m_pNetIf->hwaddr_len = ETHARP_HWADDR_LEN; //6
   eth_address((char *)m_pNetIf->hwaddr);
-  
-  DBG("HW Addr is : %02x:%02x:%02x:%02x:%02x:%02x.\n", 
+
+  DBG("HW Addr is : %02x:%02x:%02x:%02x:%02x:%02x.\r\n",
   m_pNetIf->hwaddr[0], m_pNetIf->hwaddr[1], m_pNetIf->hwaddr[2],
   m_pNetIf->hwaddr[3], m_pNetIf->hwaddr[4], m_pNetIf->hwaddr[5]);
 
@@ -113,20 +113,20 @@ EthernetErr EthernetNetIf::setup(int timeout_ms /*= 15000*/)
   m_pNetIf = netif_add(m_pNetIf, &ipaddr, &netmaskaddr, &gatewayaddr, NULL, eth_init, ip_input);//ethernet_input);// ip_input);
   m_pNetIf->hostname = (char *)m_hostname;
   netif_set_default(m_pNetIf);
-  
+
   //DBG("\r\nStarting DHCP.\r\n");
-  
+
   if(m_useDhcp)
   {
     dhcp_set_struct(m_pNetIf, m_pDhcp);
     dhcp_start(m_pNetIf);
-    DBG("DHCP Started, waiting for IP...\n");
+    DBG("DHCP Started, waiting for IP...\r\n");
   }
   else
   {
     netif_set_up(m_pNetIf);
   }
-  
+
   Timer timeout;
   timeout.start();
   while( !netif_is_up(m_pNetIf) ) //Wait until device is up
@@ -157,15 +157,15 @@ EthernetErr EthernetNetIf::setup(int timeout_ms /*= 15000*/)
       return ETH_TIMEOUT;
     }
   }
-  
+
   #if LWIP_IGMP
   igmp_start(m_pNetIf); //Start IGMP processing
   #endif
-  
+
   m_ip = IpAddr(&(m_pNetIf->ip_addr));
-   
-  DBG("Connected, IP : %d.%d.%d.%d\n", m_ip[0], m_ip[1], m_ip[2], m_ip[3]);
-  
+
+  DBG("Connected, IP : %d.%d.%d.%d\r\n", m_ip[0], m_ip[1], m_ip[2], m_ip[3]);
+
   m_setup = true;
   return ETH_OK;
 }

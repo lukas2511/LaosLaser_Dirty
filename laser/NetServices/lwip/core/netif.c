@@ -64,13 +64,13 @@
 #define NETIF_STATUS_CALLBACK(n) do{ if (n->status_callback) { (n->status_callback)(n); }}while(0)
 #else
 #define NETIF_STATUS_CALLBACK(n)
-#endif /* LWIP_NETIF_STATUS_CALLBACK */ 
+#endif /* LWIP_NETIF_STATUS_CALLBACK */
 
 #if LWIP_NETIF_LINK_CALLBACK
 #define NETIF_LINK_CALLBACK(n) do{ if (n->link_callback) { (n->link_callback)(n); }}while(0)
 #else
 #define NETIF_LINK_CALLBACK(n)
-#endif /* LWIP_NETIF_LINK_CALLBACK */ 
+#endif /* LWIP_NETIF_LINK_CALLBACK */
 
 struct netif *netif_list;
 struct netif *netif_default;
@@ -205,7 +205,7 @@ netif_add(struct netif *netif, ip_addr_t *ipaddr, ip_addr_t *netmask,
   ip_addr_debug_print(NETIF_DEBUG, netmask);
   LWIP_DEBUGF(NETIF_DEBUG, (" gw "));
   ip_addr_debug_print(NETIF_DEBUG, gw);
-  LWIP_DEBUGF(NETIF_DEBUG, ("\n"));
+  LWIP_DEBUGF(NETIF_DEBUG, ("\r\n"));
   return netif;
 }
 
@@ -273,7 +273,7 @@ netif_remove(struct netif *netif)
     /* reset default netif */
     netif_set_default(NULL);
   }
-  LWIP_DEBUGF( NETIF_DEBUG, ("netif_remove: removed netif\n") );
+  LWIP_DEBUGF( NETIF_DEBUG, ("netif_remove: removed netif\r\n") );
 }
 
 /**
@@ -298,11 +298,11 @@ netif_find(char *name)
     if (num == netif->num &&
        name[0] == netif->name[0] &&
        name[1] == netif->name[1]) {
-      LWIP_DEBUGF(NETIF_DEBUG, ("netif_find: found %c%c\n", name[0], name[1]));
+      LWIP_DEBUGF(NETIF_DEBUG, ("netif_find: found %c%c\r\n", name[0], name[1]));
       return netif;
     }
   }
-  LWIP_DEBUGF(NETIF_DEBUG, ("netif_find: didn't find %c%c\n", name[0], name[1]));
+  LWIP_DEBUGF(NETIF_DEBUG, ("netif_find: didn't find %c%c\r\n", name[0], name[1]));
   return NULL;
 }
 
@@ -327,7 +327,7 @@ netif_set_ipaddr(struct netif *netif, ip_addr_t *ipaddr)
   /* address is actually being changed? */
   if ((ip_addr_cmp(ipaddr, &(netif->ip_addr))) == 0) {
     /* extern struct tcp_pcb *tcp_active_pcbs; defined by tcp.h */
-    LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_STATE, ("netif_set_ipaddr: netif address being changed\n"));
+    LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_STATE, ("netif_set_ipaddr: netif address being changed\r\n"));
     pcb = tcp_active_pcbs;
     while (pcb != NULL) {
       /* PCB bound to current local interface address? */
@@ -339,7 +339,7 @@ netif_set_ipaddr(struct netif *netif, ip_addr_t *ipaddr)
         ) {
         /* this connection must be aborted */
         struct tcp_pcb *next = pcb->next;
-        LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_STATE, ("netif_set_ipaddr: aborting TCP pcb %p\n", (void *)pcb));
+        LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_STATE, ("netif_set_ipaddr: aborting TCP pcb %p\r\n", (void *)pcb));
         tcp_abort(pcb);
         pcb = next;
       } else {
@@ -364,7 +364,7 @@ netif_set_ipaddr(struct netif *netif, ip_addr_t *ipaddr)
   snmp_insert_ipaddridx_tree(netif);
   snmp_insert_iprteidx_tree(0,netif);
 
-  LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("netif: IP address of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\n",
+  LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("netif: IP address of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\r\n",
     netif->name[0], netif->name[1],
     ip4_addr1_16(&netif->ip_addr),
     ip4_addr2_16(&netif->ip_addr),
@@ -384,7 +384,7 @@ void
 netif_set_gw(struct netif *netif, ip_addr_t *gw)
 {
   ip_addr_set(&(netif->gw), gw);
-  LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("netif: GW address of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\n",
+  LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("netif: GW address of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\r\n",
     netif->name[0], netif->name[1],
     ip4_addr1_16(&netif->gw),
     ip4_addr2_16(&netif->gw),
@@ -408,7 +408,7 @@ netif_set_netmask(struct netif *netif, ip_addr_t *netmask)
   /* set new netmask to netif */
   ip_addr_set(&(netif->netmask), netmask);
   snmp_insert_iprteidx_tree(0, netif);
-  LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("netif: netmask of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\n",
+  LWIP_DEBUGF(NETIF_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("netif: netmask of interface %c%c set to %"U16_F".%"U16_F".%"U16_F".%"U16_F"\r\n",
     netif->name[0], netif->name[1],
     ip4_addr1_16(&netif->netmask),
     ip4_addr2_16(&netif->netmask),
@@ -433,24 +433,24 @@ netif_set_default(struct netif *netif)
     snmp_insert_iprteidx_tree(1, netif);
   }
   netif_default = netif;
-  LWIP_DEBUGF(NETIF_DEBUG, ("netif: setting default interface %c%c\n",
+  LWIP_DEBUGF(NETIF_DEBUG, ("netif: setting default interface %c%c\r\n",
            netif ? netif->name[0] : '\'', netif ? netif->name[1] : '\''));
 }
 
 /**
  * Bring an interface up, available for processing
  * traffic.
- * 
+ *
  * @note: Enabling DHCP on a down interface will make it come
  * up once configured.
- * 
+ *
  * @see dhcp_start()
- */ 
+ */
 void netif_set_up(struct netif *netif)
 {
   if (!(netif->flags & NETIF_FLAG_UP)) {
     netif->flags |= NETIF_FLAG_UP;
-    
+
 #if LWIP_SNMP
     snmp_get_sysuptime(&netif->ts);
 #endif /* LWIP_SNMP */
@@ -459,7 +459,7 @@ void netif_set_up(struct netif *netif)
 
     if (netif->flags & NETIF_FLAG_LINK_UP) {
 #if LWIP_ARP
-      /* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */ 
+      /* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */
       if (netif->flags & (NETIF_FLAG_ETHARP)) {
         etharp_gratuitous(netif);
       }
@@ -480,9 +480,9 @@ void netif_set_up(struct netif *netif)
  *
  * @note: Enabling DHCP on a down interface will make it come
  * up once configured.
- * 
+ *
  * @see dhcp_start()
- */ 
+ */
 void netif_set_down(struct netif *netif)
 {
   if (netif->flags & NETIF_FLAG_UP) {
@@ -529,7 +529,7 @@ void netif_set_link_up(struct netif *netif )
 
     if (netif->flags & NETIF_FLAG_UP) {
 #if LWIP_ARP
-      /* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */ 
+      /* For Ethernet network interfaces, we would like to send a "gratuitous ARP" */
       if (netif->flags & NETIF_FLAG_ETHARP) {
         etharp_gratuitous(netif);
       }

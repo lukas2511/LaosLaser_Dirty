@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -60,7 +60,7 @@ int HTTPFile::write(const char* buf, int len)
   if(!openFile("w")) //File does not exist, or I/O error...
     return 0;
   len = fwrite(buf, 1, len, m_fp);
-  DBG("Written %d bytes in %d\n", len, m_fp);
+  DBG("Written %d bytes in %d\r\n", len, m_fp);
   if( (!m_chunked && (ftell(m_fp) >= m_len)) ||
       (m_chunked && !len) )
   {
@@ -69,7 +69,7 @@ int HTTPFile::write(const char* buf, int len)
   }
   return len;
 }
-  
+
 string HTTPFile::getDataType() //Internet media type for Content-Type header
 {
   return ""; //Unknown
@@ -89,7 +89,7 @@ void HTTPFile::setIsChunked(bool chunked) //From Transfer-Encoding header
 {
   m_chunked = chunked;
 }
-  
+
 int HTTPFile::getDataLen() //For Content-Length header
 {
   return m_len;
@@ -103,9 +103,9 @@ void HTTPFile::setDataLen(int len) //From Content-Length header, or if the trans
 
 bool HTTPFile::openFile(const char* mode) //true on success, false otherwise
 {
-  if(m_fp) 
+  if(m_fp)
     return true;
-  
+
   m_fp = fopen(m_path.c_str(), mode);
   if(m_fp && mode[0]=='r')
   {
@@ -114,12 +114,12 @@ bool HTTPFile::openFile(const char* mode) //true on success, false otherwise
     m_len = ftell(m_fp);
     fseek(m_fp, 0, SEEK_SET); //Goto SOF
   }
-  
-  DBG("fd = %d\n", m_fp);
-  
-  if(!m_fp) 
+
+  DBG("fd = %d\r\n", m_fp);
+
+  if(!m_fp)
     return false;
-    
+
   return true;
 }
 

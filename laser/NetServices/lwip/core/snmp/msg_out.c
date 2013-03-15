@@ -125,7 +125,7 @@ snmp_send_response(struct snmp_msg_pstat *m_stat)
   p = pbuf_alloc(PBUF_TRANSPORT, tot_len, PBUF_POOL);
   if (p == NULL)
   {
-    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_snd_response() tooBig\n"));
+    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_snd_response() tooBig\r\n"));
 
     /* can't construct reply, return error-status tooBig */
     m_stat->error_status = SNMP_ES_TOOBIG;
@@ -141,7 +141,7 @@ snmp_send_response(struct snmp_msg_pstat *m_stat)
     /* first pbuf alloc try or retry alloc success */
     u16_t ofs;
 
-    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_snd_response() p != NULL\n"));
+    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_snd_response() p != NULL\r\n"));
 
     /* pass 1, size error, encode packet ino the pbuf(s) */
     ofs = snmp_resp_header_enc(m_stat, p);
@@ -189,7 +189,7 @@ snmp_send_response(struct snmp_msg_pstat *m_stat)
     udp_disconnect(m_stat->pcb);
 
     pbuf_free(p);
-    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_snd_response() done\n"));
+    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_snd_response() done\r\n"));
     return err;
   }
   else

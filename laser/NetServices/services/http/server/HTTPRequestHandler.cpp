@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 #define HTTP_REQUEST_TIMEOUT 5000
 
-HTTPRequestHandler::HTTPRequestHandler(const char* rootPath, const char* path, TCPSocket* pTCPSocket) : NetService(), 
+HTTPRequestHandler::HTTPRequestHandler(const char* rootPath, const char* path, TCPSocket* pTCPSocket) : NetService(),
 m_pTCPSocket(pTCPSocket), m_reqHeaders(), m_respHeaders(),
 m_rootPath(rootPath), m_path(path), m_errc(200),
 m_watchdog(), m_timeout(0), m_closed(false), m_headersSent(false) //OK
@@ -107,7 +107,7 @@ void HTTPRequestHandler::setContentLen(int len)
   sprintf(len_str, "%d", len);
   respHeaders()["Content-Length"] = len_str;
 }
-  
+
 map<string, string>& HTTPRequestHandler::respHeaders()
 {
   return m_respHeaders;
@@ -120,7 +120,7 @@ int HTTPRequestHandler::writeData(const char* buf, int len)
     m_headersSent = true;
     writeHeaders();
   }
-  
+
   return m_pTCPSocket->send(buf, len);
 }
 
@@ -144,7 +144,7 @@ void HTTPRequestHandler::readHeaders()
   static char value[128];
   while( readLine(line, 128) > 0) //if == 0, it is an empty line = end of headers
   {
-    int n = sscanf(line, "%[^:]: %[^\n]", key, value);
+    int n = sscanf(line, "%[^:]: %[^\r\n]", key, value);
     if ( n == 2 )
     {
       DBG("\r\nRead header : %s : %s\r\n", key, value);
@@ -157,11 +157,11 @@ void HTTPRequestHandler::readHeaders()
 void HTTPRequestHandler::writeHeaders() //Called at the first writeData call
 {
   static char line[128];
-  
+
   //Response line
   sprintf(line, "HTTP/1.1 %d MbedInfo\r\n", m_errc); //Not a violation of the standard not to include the descriptive text
   m_pTCPSocket->send(line, strlen(line));
-  
+
   map<string,string>::iterator it;
   while( !m_respHeaders.empty() )
   {
@@ -185,16 +185,16 @@ int HTTPRequestHandler::readLine(char* str, int maxLen)
     {
       break;
     }
-    if( (len > 1) && *(str-1)=='\r' && *str=='\n' )
+    if( (len > 1) && *(str-1)=='\r' && *str=='\r\n' )
     {
       str--;
       len-=2;
       break;
     }
-    else if( *str=='\n' )
+    else if( *str=='\r\n' )
     {
       len--;
-      break;    
+      break;
     }
     str++;
     len++;
@@ -205,7 +205,7 @@ int HTTPRequestHandler::readLine(char* str, int maxLen)
 
 void HTTPRequestHandler::onTCPSocketEvent(TCPSocketEvent e)
 {
-   
+
   DBG("\r\nEvent %d in HTTPRequestHandler\r\n", e);
 
   if(m_closed)
@@ -222,7 +222,7 @@ void HTTPRequestHandler::onTCPSocketEvent(TCPSocketEvent e)
     break;
   case TCPSOCKET_WRITEABLE:
     resetTimeout();
-    onWriteable();    
+    onWriteable();
     break;
   case TCPSOCKET_CONTIMEOUT:
   case TCPSOCKET_CONRST:
@@ -233,5 +233,5 @@ void HTTPRequestHandler::onTCPSocketEvent(TCPSocketEvent e)
     close();
     break;
   }
-  
+
 }

@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,27 +43,27 @@ TelitModule::~TelitModule() {
 }
 
 bool TelitModule::isOn() //True if on
-{ 
+{
   return m_pwrMonPin.read();
 }
 
 bool TelitModule::on() //True if OK
-{ 
+{
   Timer tmr;
   if(!m_pwrMonPin.read()){
     //On
-    DBG("Switching On...\n");
+    DBG("Switching On...\r\n");
     m_pwrSetPin.write(1);
     wait(1.);
     m_pwrSetPin.write(0);
-       
+
     tmr.start();
     while(!m_pwrMonPin.read())
     {
       wait(.001);
       if(tmr.read() > 2)
-      { 
-         DBG("ERROR - MUST RESET MODULE\n");
+      {
+         DBG("ERROR - MUST RESET MODULE\r\n");
          break;
       }
     }
@@ -77,18 +77,18 @@ bool TelitModule::off() { //True if OK
   Timer tmr;
   if(m_pwrMonPin.read()){
     //Off
-    DBG("Switching Off...\n");
+    DBG("Switching Off...\r\n");
     m_pwrSetPin.write(1);
     wait(3.);
     m_pwrSetPin.write(0);
-      DBG("Waiting....\n"); 
+      DBG("Waiting....\r\n");
     tmr.start();
     while(m_pwrMonPin.read())
     {
       wait(.001);
       if(tmr.read() > 15)
-      { 
-         DBG("ERROR - MUST RESET MODULE\n");
+      {
+         DBG("ERROR - MUST RESET MODULE\r\n");
          break;
       }
     }

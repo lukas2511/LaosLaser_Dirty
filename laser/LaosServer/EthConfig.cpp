@@ -59,18 +59,18 @@ EthernetNetIf * EthConfig()
     EthernetNetIf *eth;
     if ( cfg->dhcp )
     {
-        printf("DHCP...\n");
+        printf("DHCP...\r\n");
         eth = new EthernetNetIf();
     }
     else
     {
-        printf("FIXED IP...\n");
+        printf("FIXED IP...\r\n");
         eth = new EthernetNetIf(IP(cfg->ip), IP(cfg->nm), IP(cfg->gw), IP(cfg->dns));
     }
-    printf("Ethernet Setup...\n");
-    if ( eth->setup() == ETH_TIMEOUT ) 
+    printf("Ethernet Setup...\r\n");
+    if ( eth->setup() == ETH_TIMEOUT )
     {
-        printf("Timeout!\n");
+        printf("Timeout!\r\n");
         delete eth;
         eth = new EthernetNetIf(IP(cfg->ip), IP(cfg->nm), IP(cfg->gw), IP(cfg->dns));
     }
@@ -80,7 +80,7 @@ EthernetNetIf * EthConfig()
     cfg->ip[1] = myip[1];
     cfg->ip[2] = myip[2];
     cfg->ip[3] = myip[3];
-    
+
     printf("mbed IP Address is %d.%d.%d.%d\r\n", myip[0], myip[1], myip[2], myip[3]);
     return eth;
 }

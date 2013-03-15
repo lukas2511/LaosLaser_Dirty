@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,18 +47,18 @@ m_pCbItem(NULL), m_pCbMeth(NULL), m_pNextEp(NULL)
   {
     m_pNextEp = NULL;
     m_pHeadEp = this;
-  }  
+  }
 
   m_pEd = (volatile HCED*)usb_get_ed();
-  
+
   m_pTdHead = (volatile HCTD*)usb_get_td();
   m_pTdTail = (volatile HCTD*)usb_get_td();
-  
+
   //printf("\r\n--m_pEd = %p--\r\n", m_pEd);
-  DBG("m_pEd = %p\n", m_pEd);
-  DBG("m_pTdHead = %p\n", m_pTdHead);
-  DBG("m_pTdTail = %p\n", m_pTdTail);
-  
+  DBG("m_pEd = %p\r\n", m_pEd);
+  DBG("m_pTdHead = %p\r\n", m_pTdHead);
+  DBG("m_pTdTail = %p\r\n", m_pTdTail);
+
   //Init Ed & Td
   //printf("\r\n--Ep Init--\r\n");
   memset((void*)m_pEd, 0, sizeof(HCED));
@@ -66,25 +66,25 @@ m_pCbItem(NULL), m_pCbMeth(NULL), m_pNextEp(NULL)
 
   memset((void*)m_pTdHead, 0, sizeof(HCTD));
   memset((void*)m_pTdTail, 0, sizeof(HCTD));
-  
+
   if(addr == -1)
     addr = pDevice->m_addr;
-  
+
   //Setup Ed
   //printf("\r\n--Ep Setup--\r\n");
   m_pEd->Control =  addr        |      /* USB address           */
   ((ep & 0x7F) << 7)            |      /* Endpoint address      */
   (type!=USB_CONTROL?((dir?2:1) << 11):0)             |      /* direction : Out = 1, 2 = In */
   (size << 16);     /* MaxPkt Size           */
-  
+
   m_dir = dir;
   m_setup = false;
   m_type = type;
-  
+
   m_pEd->TailTd = m_pEd->HeadTd = (uint32_t) m_pTdTail; //Empty TD list
-  
-  DBG("Before link\n");
-  
+
+  DBG("Before link\r\n");
+
   //printf("\r\n--Ep Reg--\r\n");
   //Append Ed to Ed list
   volatile HCED* prevEd;
@@ -98,20 +98,20 @@ m_pCbItem(NULL), m_pCbMeth(NULL), m_pNextEp(NULL)
     prevEd = (volatile HCED*) LPC_USB->HcBulkHeadED;
     break;
   }
-  
-  DBG("prevEd is %p\n", prevEd);
-  
+
+  DBG("prevEd is %p\r\n", prevEd);
+
   if(prevEd)
   {
-    DBG("prevEd set\n")
-  
+    DBG("prevEd set\r\n")
+
     while(prevEd->Next)
     {
-      DBG("prevEd->Next = %08x\n", prevEd->Next);
+      DBG("prevEd->Next = %08x\r\n", prevEd->Next);
       prevEd = (volatile HCED*) prevEd->Next;
     }
     prevEd->Next = (uint32_t) m_pEd;
-  
+
   }
   else
   {
@@ -126,8 +126,8 @@ m_pCbItem(NULL), m_pCbMeth(NULL), m_pNextEp(NULL)
       break;
     }
   }
-  
-  DBG("Ep init\n");
+
+  DBG("Ep init\r\n");
 }
 
 UsbEndpoint::~UsbEndpoint()
@@ -144,8 +144,8 @@ UsbEndpoint::~UsbEndpoint()
   else
   {
     m_pHeadEp = m_pNextEp;
-  }  
-  
+  }
+
   m_pEd->Control |= ED_SKIP; //Skip this Ep in queue
 
   //Remove from queue
@@ -182,10 +182,10 @@ UsbEndpoint::~UsbEndpoint()
     }
     prevEd->Next = m_pEd->Next;
   }
-  
+
   //
   usb_free_ed((volatile byte*)m_pEd);
-  
+
   usb_free_td((volatile byte*)m_pTdHead);
   usb_free_td((volatile byte*)m_pTdTail);
 }
@@ -212,14 +212,14 @@ void UsbEndpoint::setNextToken(uint32_t token) //Only for control Eps
 UsbErr UsbEndpoint::transfer(volatile uint8_t* buf, uint32_t len)
 {
   if(!m_result)
-    return USBERR_BUSY; //The previous trasnfer is not completed 
+    return USBERR_BUSY; //The previous trasnfer is not completed
     //FIXME: We should be able to queue the next transfer, still needs to be implemented
-  
+
   if( !m_pDevice->connected() )
     return USBERR_DISCONNECTED;
-  
+
   m_result = false;
-  
+
   volatile uint32_t token = (m_setup?TD_SETUP:(m_dir?TD_IN:TD_OUT));
 
   volatile uint32_t td_toggle;
@@ -259,11 +259,11 @@ UsbErr UsbEndpoint::transfer(volatile uint8_t* buf, uint32_t len)
   m_pTdTail->Next         = 0;
   m_pTdHead->BufEnd       = (uint32_t)(buf + (len - 1));
   m_pTdTail->BufEnd       = 0;
-  
+
   m_pEd->HeadTd  = (uint32_t)m_pTdHead | ((m_pEd->HeadTd) & 0x00000002); //Carry bit
   m_pEd->TailTd  = (uint32_t)m_pTdTail;
-  
-  //DBG("m_pEd->HeadTd = %08x\n", m_pEd->HeadTd);
+
+  //DBG("m_pEd->HeadTd = %08x\r\n", m_pEd->HeadTd);
 
   if(m_type == USB_CONTROL)
   {
@@ -275,14 +275,14 @@ UsbErr UsbEndpoint::transfer(volatile uint8_t* buf, uint32_t len)
     LPC_USB->HcCommandStatus = LPC_USB->HcCommandStatus | OR_CMD_STATUS_BLF;
     LPC_USB->HcControl       = LPC_USB->HcControl       | OR_CONTROL_BLE; //Enable bulk list
   }
-  
+
   //m_done = false;
   m_len = len;
 
   return USBERR_PROCESSING;
- 
+
 }
-  
+
 int UsbEndpoint::status()
 {
   if( !m_pDevice->connected() )
@@ -293,7 +293,7 @@ int UsbEndpoint::status()
     return (int)USBERR_DISCONNECTED;
   }
   else if( !m_result )
-  { 
+  {
     return (int)USBERR_PROCESSING;
   }
   /*else if( m_done )
@@ -308,18 +308,18 @@ int UsbEndpoint::status()
 
 void UsbEndpoint::updateAddr(int addr)
 {
-  DBG("m_pEd->Control = %08x\n", m_pEd->Control);
+  DBG("m_pEd->Control = %08x\r\n", m_pEd->Control);
   m_pEd->Control &= ~0x7F;
   m_pEd->Control |= addr;
-  DBG("m_pEd->Control = %08x\n", m_pEd->Control);
+  DBG("m_pEd->Control = %08x\r\n", m_pEd->Control);
 }
 
 void UsbEndpoint::updateSize(uint16_t size)
 {
-  DBG("m_pEd->Control = %08x\n", m_pEd->Control);
+  DBG("m_pEd->Control = %08x\r\n", m_pEd->Control);
   m_pEd->Control &= ~0x3FF0000;
   m_pEd->Control |= (size << 16);
-  DBG("m_pEd->Control = %08x\n", m_pEd->Control);
+  DBG("m_pEd->Control = %08x\r\n", m_pEd->Control);
 }
 
 #if 0 //For doc only
@@ -333,10 +333,10 @@ void UsbEndpoint::setOnCompletion( T* pCbItem, void (T::*pCbMeth)() )
 
 void UsbEndpoint::onCompletion()
 {
-  //DBG("Transfer completed\n");
+  //DBG("Transfer completed\r\n");
   if( m_pTdHead->Control >> 28  )
   {
-    DBG("TD Failed with condition code %01x\n", m_pTdHead->Control >> 28 );
+    DBG("TD Failed with condition code %01x\r\n", m_pTdHead->Control >> 28 );
     m_status = (int)USBERR_TDFAIL;
   }
   else if( m_pEd->HeadTd & 0x1 )
@@ -349,7 +349,7 @@ void UsbEndpoint::onCompletion()
   {
     //Done
     int len;
-    //DBG("m_pTdHead->CurrBufPtr = %08x, m_pBufStartPtr=%08x\n", m_pTdHead->CurrBufPtr, (uint32_t) m_pBufStartPtr);
+    //DBG("m_pTdHead->CurrBufPtr = %08x, m_pBufStartPtr=%08x\r\n", m_pTdHead->CurrBufPtr, (uint32_t) m_pBufStartPtr);
     if(m_pTdHead->CurrBufPtr)
       len = m_pTdHead->CurrBufPtr - (uint32_t) m_pBufStartPtr;
     else
@@ -357,12 +357,12 @@ void UsbEndpoint::onCompletion()
     /*if(len == 0) //Packet transfered completely
       len = m_len;*/
     //m_done = true;
-    DBG("Transfered %d bytes\n", len);
-    m_status = len; 
+    DBG("Transfered %d bytes\r\n", len);
+    m_status = len;
   }
   else
   {
-    DBG("Unknown error...\n");
+    DBG("Unknown error...\r\n");
     m_status = (int)USBERR_ERROR;
   }
   m_result = true;
@@ -376,8 +376,8 @@ void UsbEndpoint::sOnCompletion(uint32_t pTd)
       return;
   do
   {
-    //DBG("sOnCompletion (pTd = %08x)\n", pTd);
-    UsbEndpoint* pEp = m_pHeadEp;  
+    //DBG("sOnCompletion (pTd = %08x)\r\n", pTd);
+    UsbEndpoint* pEp = m_pHeadEp;
     do
     {
       if((uint32_t)pEp->m_pTdHead == pTd)

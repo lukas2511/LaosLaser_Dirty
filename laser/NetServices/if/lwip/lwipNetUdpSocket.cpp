@@ -1,17 +1,17 @@
 #pragma diag_remark 1464
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 LwipNetUdpSocket::LwipNetUdpSocket(udp_pcb* pPcb /*= NULL*/) : NetUdpSocket(), m_pPcb(pPcb), m_lInPkt(), m_multicastGroup() //Passes a pcb if already created (by an accept req for instance), in that case transfers ownership
 {
-  DBG("New LwipNetUdpSocket %p (pPCb=%p)\n", (void*)this, (void*) pPcb);
+  DBG("New LwipNetUdpSocket %p (pPCb=%p)\r\n", (void*)this, (void*) pPcb);
   if(!m_pPcb)
     m_pPcb = udp_new();
   if(m_pPcb)
@@ -49,18 +49,18 @@ LwipNetUdpSocket::~LwipNetUdpSocket()
 {
   close();
 }
-  
+
 NetUdpSocketErr LwipNetUdpSocket::bind(const Host& me)
 {
   err_t err;
-  
+
   if(!m_pPcb)
     return NETUDPSOCKET_MEM; //NetUdpSocket was not properly initialised, should destroy it & retry
-   
+
   #if LWIP_IGMP //Multicast support enabled
   if(me.getIp().isMulticast())
   {
-    DBG("This is a multicast addr, joining multicast group\n");
+    DBG("This is a multicast addr, joining multicast group\r\n");
     m_multicastGroup = me.getIp();
     ip_addr_t multicastGroupAddr = m_multicastGroup.getStruct();
     err = igmp_joingroup(IP_ADDR_ANY, &multicastGroupAddr);
@@ -75,7 +75,7 @@ NetUdpSocketErr LwipNetUdpSocket::bind(const Host& me)
 
   //Setup callback
   udp_recv( (udp_pcb*) m_pPcb, LwipNetUdpSocket::sRecvCb, (void*) this );
-    
+
   return NETUDPSOCKET_OK;
 }
 
@@ -90,10 +90,10 @@ int /*if < 0 : NetUdpSocketErr*/ LwipNetUdpSocket::sendto(const char* buf, int l
   if( !p )
     return NETUDPSOCKET_MEM;
   char* pBuf = (char*) buf;
-  pbuf* q = p; 
+  pbuf* q = p;
   do
   {
-    memcpy (q->payload, (void*)pBuf, q->len);  
+    memcpy (q->payload, (void*)pBuf, q->len);
     pBuf += q->len;
     q = q->next;
   } while(q != NULL);
@@ -103,7 +103,7 @@ int /*if < 0 : NetUdpSocketErr*/ LwipNetUdpSocket::sendto(const char* buf, int l
   pbuf_free( p );
   if(err)
     return NETUDPSOCKET_SETUP; //Connection problem
-  DBG("%d bytes sent in UDP Socket.\n", len);
+  DBG("%d bytes sent in UDP Socket.\r\n", len);
   return len;
 }
 
@@ -113,44 +113,44 @@ int /*if < 0 : NetUdpSocketErr*/ LwipNetUdpSocket::recvfrom(char* buf, int len, 
     return NETUDPSOCKET_MEM;
   int inLen = 0;
   int cpyLen = 0;
-  
-  static int rmgLen = 0; 
+
+  static int rmgLen = 0;
   //Contains the remaining len in this pbuf
-  
+
   if( m_lInPkt.empty() )
     return 0;
-    
+
   pbuf* pBuf = (pbuf*) m_lInPkt.front().pBuf;
-  
+
   if(pHost)
     *pHost = Host( IpAddr(&m_lInPkt.front().addr), m_lInPkt.front().port );
-  
+
   if( !pBuf )
   {
     rmgLen = 0;
     return 0;
   }
-  
+
   if ( !rmgLen ) //We did not know m_pReadPbuf->len last time we called this fn
   {
     rmgLen = pBuf->len;
   }
-  
+
   while ( inLen < len )
   {
     cpyLen = MIN( (len - inLen), rmgLen ); //Remaining len to copy, remaining len in THIS pbuf
     memcpy((void*)buf, (void*)((char*)(pBuf->payload) + (pBuf->len - rmgLen)), cpyLen);
     inLen += cpyLen;
     buf += cpyLen;
-    
+
     rmgLen = rmgLen - cpyLen; //Update rmgLen
-    
+
     if( rmgLen > 0 )
     {
       //We did not read this pbuf completely, so let's save it's pos & return
       break;
     }
-    
+
     if(pBuf->next)
     {
       pbuf* pNextPBuf = pBuf->next;
@@ -167,32 +167,32 @@ int /*if < 0 : NetUdpSocketErr*/ LwipNetUdpSocket::recvfrom(char* buf, int len, 
       rmgLen = 0;
       m_lInPkt.pop_front();
       break; //No more data to read
-    } 
+    }
   }
-  
+
   return inLen;
 }
 
 NetUdpSocketErr LwipNetUdpSocket::close()
 {
-  DBG("LwipNetUdpSocket::close() : Closing...\n");
+  DBG("LwipNetUdpSocket::close() : Closing...\r\n");
 
   if(m_closed)
     return NETUDPSOCKET_OK; //Already being closed
   m_closed = true;
-  
+
   if( !m_pPcb ) //Pcb doesn't exist (anymore)
     return NETUDPSOCKET_MEM;
-    
-  DBG("LwipNetUdpSocket::close() : Cleanup...\n");
-    
+
+  DBG("LwipNetUdpSocket::close() : Cleanup...\r\n");
+
   //Cleanup incoming data
   cleanUp();
-  
 
-  DBG("LwipNetUdpSocket::close() : removing m_pPcb...\n");
+
+  DBG("LwipNetUdpSocket::close() : removing m_pPcb...\r\n");
   udp_remove( (udp_pcb*) m_pPcb);
-    
+
   m_pPcb = NULL;
   return NETUDPSOCKET_OK;
 }
@@ -207,7 +207,7 @@ NetUdpSocketErr LwipNetUdpSocket::poll()
 
 void LwipNetUdpSocket::recvCb(udp_pcb* pcb, struct pbuf* p, ip_addr_t* addr, u16_t port)
 {
-  DBG(" Packet of length %d arrived in UDP Socket.\n", p->tot_len);
+  DBG(" Packet of length %d arrived in UDP Socket.\r\n", p->tot_len);
   list<InPacket>::iterator it;
   for ( it = m_lInPkt.begin(); it != m_lInPkt.end(); it++ )
   {
@@ -226,7 +226,7 @@ void LwipNetUdpSocket::recvCb(udp_pcb* pcb, struct pbuf* p, ip_addr_t* addr, u16
   pkt.addr = *addr;
   pkt.port = port;
   m_lInPkt.push_back(pkt);
-  
+
   queueEvent(NETUDPSOCKET_READABLE);
 }
 
@@ -237,7 +237,7 @@ void LwipNetUdpSocket::cleanUp() //Flush input buffer
   {
     udp_recv( (udp_pcb*) m_pPcb, NULL, (void*) NULL );
   }
-  
+
   //Leaving multicast group(Ok because LwIP has a refscount for multicast group)
   #if LWIP_IGMP //Multicast support enabled
   if(m_multicastGroup.isMulticast())
@@ -247,13 +247,13 @@ void LwipNetUdpSocket::cleanUp() //Flush input buffer
     m_multicastGroup = IpAddr();
   }
   #endif
-  
+
   list<InPacket>::iterator it;
   for ( it = m_lInPkt.begin(); it != m_lInPkt.end(); it++ )
   {
     //Free buf
     pbuf_free((pbuf*)((*it).pBuf));
-  } 
+  }
   m_lInPkt.clear();
 }
 

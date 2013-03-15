@@ -186,7 +186,7 @@ void LaosFileSystem::makeshortname(char* shortname, char* name) {
         sprintf(fullname, "%s%s", pathname, shortname);
         fp = fopen(fullname, "rb");
     } while (fp!=NULL);
-    
+
     FILE *tfp = fopen(tablename, "ab");
     dirwrite(name, shortname, tfp);
     fclose(tfp);
@@ -201,7 +201,7 @@ void LaosFileSystem::cleanlist() {
     char tabletmpname[MAXFILESIZE+SHORTFILESIZE+1];
     strcpy (tabletmpname, tablename);
     tabletmpname[strlen(tabletmpname)-1] = '~';
-    
+
     // make a full copy of the table
     FILE* fp1 = fopen(tablename, "rb");
     if (fp1 == NULL) return;
@@ -224,7 +224,7 @@ void LaosFileSystem::cleanlist() {
         if (fp != NULL) {
             fclose(fp);
             dirwrite(longname, shortname, fp1);
-        } 
+        }
      }
      fclose(fp1);
      fclose(fp2);
@@ -252,12 +252,12 @@ void LaosFileSystem::shorten(char* name, int max) {
 size_t LaosFileSystem::dirread(char* longname, char* shortname, FILE *fp) {
     char buff[MAXFILESIZE+SHORTFILESIZE];
     size_t result = fread(buff, 1, MAXFILESIZE+SHORTFILESIZE, fp);
-    if (result) {       
+    if (result) {
         strncpy(longname, buff, MAXFILESIZE);
         longname[MAXFILESIZE-1] = 0;
         int cnt = MAXFILESIZE-2;
         while (longname[cnt]==' ') longname[cnt--] = 0;
-        
+
         strncpy(shortname, &buff[MAXFILESIZE], SHORTFILESIZE);
         shortname[SHORTFILESIZE-1] = 0;
         cnt = SHORTFILESIZE-2;
@@ -268,14 +268,14 @@ size_t LaosFileSystem::dirread(char* longname, char* shortname, FILE *fp) {
 
 size_t LaosFileSystem::dirwrite(char* longname, char* shortname, FILE* fp) {
     char buff[MAXFILESIZE+SHORTFILESIZE];
-    int x=0; 
+    int x=0;
     while (longname[x] != 0) buff[x++] = longname[x];
     while (x<MAXFILESIZE-1) buff[x++] = ' ';
     buff[x++] = '\t';
     while (shortname[x-MAXFILESIZE] != 0) buff[x++] = shortname[x-MAXFILESIZE];
     while (x<MAXFILESIZE+SHORTFILESIZE-1) buff[x++] = ' ';
-    buff[x++] = '\n';
-    
+    buff[x++] = '\r\n';
+
     return fwrite(buff, 1, MAXFILESIZE+SHORTFILESIZE, fp);
 }
 
@@ -283,11 +283,11 @@ void showfile() {
     char buff[35];
     FILE *fp = fopen("/sd/longname.sys","rb");
     if (fp) {
-        printf("Contents of longname.sys\n\r");
+        printf("Contents of longname.sys\r\n");
         while (fread(buff, 1, MAXFILESIZE+SHORTFILESIZE, fp))
             printf("> %s\r", buff);
         fclose(fp);
-        printf("\n\r");
+        printf("\r\n");
     }
 }
 
@@ -302,29 +302,29 @@ void cleandir() {
             remove(fullname);
         }
     } else {
-        error("Could not open directory!\n\r");
+        error("Could not open directory!\r\n");
     }
 }
 
 void printdir() {
     extern LaosFileSystem sd;
-    printf("List of files in /sd\n\r");
+    printf("List of files in /sd\r\n");
     DIR *d;
     struct dirent *p;
     d = opendir("/sd");
     if(d != NULL) {
-        // printf("...\n\r");
+        // printf("...\r\n");
         while((p = readdir(d)) != NULL) {
-            // printf("Short %s\n\r", p->d_name);
+            // printf("Short %s\r\n", p->d_name);
             if (strncmp(p->d_name, "longname.sy",11)) {
                 char longname[MAXFILESIZE];
-                // printf("Getlongname\n\r");
+                // printf("Getlongname\r\n");
                 sd.getlongname(longname, p->d_name);
-                printf(" - %s (short: %s)\n\r", longname, p->d_name);
+                printf(" - %s (short: %s)\r\n", longname, p->d_name);
             }
         }
     } else {
-        printf("Could not open directory!\n\r");
+        printf("Could not open directory!\r\n");
     }
 }
 
@@ -353,10 +353,10 @@ void getprevjob(char *name) {
         } // while
         closedir(d);
     } else {
-        printf("Getfilename: Could not open directory!\n\r");
+        printf("Getfilename: Could not open directory!\r\n");
     }
-    sd.getlongname(name, last); // name not found (return last) 
-                                // or no file found (return "") 
+    sd.getlongname(name, last); // name not found (return last)
+                                // or no file found (return "")
 }
 
 void getnextjob(char *name) {
@@ -380,7 +380,7 @@ void getnextjob(char *name) {
         } // while
         closedir(d);
     } else {
-        printf("Getfilename: Could not open directory!\n\r");
+        printf("Getfilename: Could not open directory!\r\n");
     }
     sd.getlongname(name, last);     // if last file was match, return the last
                                     // if filename not found, return last
@@ -407,7 +407,7 @@ void getfilename(char *name, int filenr) {
         strcpy(name, "");
         closedir(d);
     } else {
-        printf("Getfilename: Could not open directory!\n\r");
+        printf("Getfilename: Could not open directory!\r\n");
     }
 }
 
@@ -432,7 +432,7 @@ int getfilenum(char *name) {
         closedir(d);
         return 0;
     } else {
-        printf("Getfilename: Could not open directory!\n\r");
+        printf("Getfilename: Could not open directory!\r\n");
     }
     return 0;
 }
@@ -440,11 +440,11 @@ int getfilenum(char *name) {
 
 void writefile(char *myfile) {
     extern LaosFileSystem sd;
-    printf("Writing file %s\n\r", myfile);
+    printf("Writing file %s\r\n", myfile);
     FILE *fp = sd.openfile(myfile, "wb");
     if (fp) {
         fclose(fp);
-    } 
+    }
 }
 
 void removefile(char *name) {
@@ -455,9 +455,9 @@ void removefile(char *name) {
         char fullname[MAXFILESIZE+SHORTFILESIZE+1];
         sprintf(fullname, "%s%s", sd.pathname, shortname);
         if (remove(fullname) < 0)
-            printf("Error while removing file %s\n\r", fullname);
-        sd.cleanlist();           
-    } 
+            printf("Error while removing file %s\r\n", fullname);
+        sd.cleanlist();
+    }
 }
 
 // Read an integer from file
@@ -466,30 +466,30 @@ int readint(FILE *fp)
   unsigned short int i=0;
   int sign=1;
   char c, str[16];
-  
+
   while( !feof(fp)  )
   {
-    fread(&c, sizeof(c),1,fp);   
-    
+    fread(&c, sizeof(c),1,fp);
+
     switch(c)
     {
-      case '0': case '1': case '2':  case '3':  case '4': 
-      case '5': case '6': case '7':  case '8':  case '9':  
-        if ( i < sizeof(str)) 
+      case '0': case '1': case '2':  case '3':  case '4':
+      case '5': case '6': case '7':  case '8':  case '9':
+        if ( i < sizeof(str))
           str[i++] = (char)c;
         break;
       case '-': sign = -1; break;
-      case ';': while ((!feof(fp)) && (c != '\n')) {
+      case ';': while ((!feof(fp)) && (c != '\r\n')) {
             fread(&c, sizeof(c),1,fp);
         }
-        break; 
-      case ' ': case '\t': case '\r': case '\n':
+        break;
+      case ' ': case '\t': case '\r': case '\r\n':
         if ( i )
         {
           int val=0, d=1;
-          while(i) 
+          while(i)
           {
-            if ( str[i-1] == '-' ) 
+            if ( str[i-1] == '-' )
               d *= -1;
             else
               val += (str[i-1]-'0') * d;
@@ -519,13 +519,13 @@ int isFirmware(char *filename) {
         return 1;
     else
         return 0;
-} 
+}
 
 void installFirmware(char *filename) {
     removeFirmware();
     char buff[512];
     extern LaosFileSystem sd;
-    //printf("Copy firmware file %s\n\r", filename);
+    //printf("Copy firmware file %s\r\n", filename);
     FILE *fp = sd.openfile(filename, "rb");
     if (fp) {
         FILE *fp2 = fopen("/local/firmware.bin", "wb");
@@ -549,10 +549,10 @@ void removeFirmware() { // remove old firmware from SD
                 char name[32];
                 sprintf(name, "/local/%s", p->d_name);
                 remove(name);
-            } 
+            }
         }
     } else {
-        printf("removeFirmware: Could not open directory!\n\r");
+        printf("removeFirmware: Could not open directory!\r\n");
     }
 }
 
@@ -571,7 +571,7 @@ int SDcheckFirmware() {
             }
         }
     } else {
-        printf("SDcheckFirmware: Could not open directory!\n\r");
+        printf("SDcheckFirmware: Could not open directory!\r\n");
     }
     return 0;
 }

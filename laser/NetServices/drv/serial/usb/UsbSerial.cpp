@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,26 +38,26 @@ namespace mbed {
 
 UsbSerial::UsbSerial(UsbDevice* pDevice, int epIn, int epOut, const char* name /*= NULL*/) : Stream(name), m_epIn(pDevice, epIn, true, USB_BULK, BUF_LEN), m_epOut(pDevice, epOut, false, USB_BULK, BUF_LEN),
 m_pInCbItem(NULL), m_pInCbMeth(NULL), m_pOutCbItem(NULL), m_pOutCbMeth(NULL)
-{ 
+{
   m_inBufEven = new char[BUF_LEN];
   m_inBufOdd = new char[BUF_LEN];
   m_pInBufPos = m_inBufUsr = m_inBufEven;
   m_inBufTrmt = m_inBufOdd;
-  
+
   m_outBufEven = new char[BUF_LEN];
   m_outBufOdd = new char[BUF_LEN];
   m_pOutBufPos = m_outBufUsr = m_outBufEven;
   m_outBufTrmt = m_outBufOdd;
-  
+
   m_inBufLen = m_outBufLen = 0;
-  
-  DBG("Starting RX'ing on in ep\n");
-  
+
+  DBG("Starting RX'ing on in ep\r\n");
+
   m_timeout = false;
-  
+
   m_epIn.setOnCompletion(this, &UsbSerial::onEpInTransfer);
   m_epOut.setOnCompletion(this, &UsbSerial::onEpOutTransfer);
-  
+
   startRx();
 }
 
@@ -69,13 +69,13 @@ UsbSerial::~UsbSerial()
   delete[] m_outBufOdd;
 }
 
-void UsbSerial::baud(int baudrate) { 
+void UsbSerial::baud(int baudrate) {
     //
 }
 
-void UsbSerial::format(int bits, int parity, int stop) { 
+void UsbSerial::format(int bits, int parity, int stop) {
   //
-} 
+}
 
 #if 0 //For doc only
 template <class T>
@@ -86,7 +86,7 @@ void attach(T* pCbItem, void (T::*pCbMeth)())
 }
 #endif
 
-int UsbSerial::_getc() { 
+int UsbSerial::_getc() {
     NVIC_DisableIRQ(US_TICKER_TIMER_IRQn);
     NVIC_DisableIRQ(USB_IRQn);
     char c;
@@ -97,7 +97,7 @@ int UsbSerial::_getc() {
     return c;
 }
 
-int UsbSerial::_putc(int c) { 
+int UsbSerial::_putc(int c) {
     NVIC_DisableIRQ(US_TICKER_TIMER_IRQn);
     NVIC_DisableIRQ(USB_IRQn);
     if( (m_pOutBufPos - m_outBufUsr) < BUF_LEN )
@@ -107,7 +107,7 @@ int UsbSerial::_putc(int c) {
     }
     else
     {
-      DBG("NO WAY!!!\n");
+      DBG("NO WAY!!!\r\n");
     }
     #if 1
     if( (m_pOutBufPos - m_outBufUsr) >= BUF_LEN ) //Must flush
@@ -135,7 +135,7 @@ int UsbSerial::_putc(int c) {
     return c;
 }
 
-int UsbSerial::readable() { 
+int UsbSerial::readable() {
     NVIC_DisableIRQ(US_TICKER_TIMER_IRQn);
     NVIC_DisableIRQ(USB_IRQn);
     int res;
@@ -155,7 +155,7 @@ int UsbSerial::readable() {
     return (bool)res;
 }
 
-int UsbSerial::writeable() { 
+int UsbSerial::writeable() {
     NVIC_DisableIRQ(US_TICKER_TIMER_IRQn);
     NVIC_DisableIRQ(USB_IRQn);
   //  DBG("\r\nWRITEABLE???\r\n");
@@ -180,7 +180,7 @@ void UsbSerial::onWriteable()
 void UsbSerial::onEpInTransfer()
 {
   int len = m_epIn.status();
-  DBG("RX transfer completed w len=%d\n",len);
+  DBG("RX transfer completed w len=%d\r\n",len);
   startRx();
   if(len > 0)
     onReadable();
@@ -189,7 +189,7 @@ void UsbSerial::onEpInTransfer()
 void UsbSerial::onEpOutTransfer()
 {
   int len = m_epOut.status();
-  DBG("TX transfer completed w len=%d\n",len);
+  DBG("TX transfer completed w len=%d\r\n",len);
   if(m_timeout)
     m_txTimeout.detach();
   startTx();
@@ -199,44 +199,44 @@ void UsbSerial::onEpOutTransfer()
 
 void UsbSerial::startTx()
 {
-  
-  DBG("Transfer>\n");
-  
+
+  DBG("Transfer>\r\n");
+
   m_timeout = false;
-  
+
 //  m_txTimeout.detach();
-   
+
   if(!(m_pOutBufPos - m_outBufUsr))
   {
-    DBG("?!?!?\n");
+    DBG("?!?!?\r\n");
     return;
   }
-  
+
   if( m_epOut.status() == USBERR_PROCESSING )
   {
     //Wait & retry
     //m_timeout = true;
     //m_txTimeout.attach_us(this, &UsbSerial::startTx, FLUSH_TMOUT);
-    DBG("Ep is busy...\n");
+    DBG("Ep is busy...\r\n");
     return;
   }
-  
+
   if( m_epOut.status() < 0 )
   {
-    DBG("Tx trying again...\n");
+    DBG("Tx trying again...\r\n");
     m_epOut.transfer((volatile uint8_t*)m_outBufTrmt, m_outBufLen);
     return;
   }
 
   m_outBufLen = m_pOutBufPos - m_outBufUsr;
-  
+
   //Swap buffers
   volatile char* swapBuf = m_outBufUsr;
   m_outBufUsr = m_outBufTrmt;
   m_outBufTrmt = swapBuf;
-  
+
   m_epOut.transfer((volatile uint8_t*)m_outBufTrmt, m_outBufLen);
-  
+
   m_pOutBufPos = m_outBufUsr;
 
 }
@@ -256,26 +256,26 @@ void UsbSerial::startRx()
   }
   if( len < 0 )
   {
-    DBG("Rx trying again...\n");
+    DBG("Rx trying again...\r\n");
     m_epIn.transfer((volatile uint8_t*)m_inBufTrmt, BUF_LEN); //Start another transmission
     return;
   }
-  
+
   m_inBufLen = len;
-  
+
   //Swap buffers
   volatile char* swapBuf = m_inBufUsr;
   m_inBufUsr =  m_inBufTrmt;
   m_inBufTrmt = swapBuf;
   m_pInBufPos = m_inBufUsr;
-  
-  DBG("Starting new transfer\n");
+
+  DBG("Starting new transfer\r\n");
   m_epIn.transfer((volatile uint8_t*)m_inBufTrmt, BUF_LEN); //Start another transmission
-  
+
 }
 
 #ifdef MBED_RPC
-const struct rpc_method *UsbSerial::get_rpc_methods() { 
+const struct rpc_method *UsbSerial::get_rpc_methods() {
     static const rpc_method methods[] = {
         { "readable", rpc_method_caller<int, UsbSerial, &UsbSerial::readable> },
         { "writeable", rpc_method_caller<int, UsbSerial, &UsbSerial::writeable> },

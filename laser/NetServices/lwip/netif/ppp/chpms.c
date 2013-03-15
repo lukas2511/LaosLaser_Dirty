@@ -11,13 +11,13 @@
 * The authors hereby grant permission to use, copy, modify, distribute,
 * and license this software and its documentation for any purpose, provided
 * that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
+* notice and the following disclaimer are included verbatim in any
 * distributions. No written agreement, license, or royalty fee is required
 * for any of the authorized uses.
 *
 * THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
 * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 * IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
 * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
@@ -179,7 +179,7 @@ DesEncrypt( u_char *clear, /* IN  8 octets */
   setkey((char*)crypt_key);
 
 #if 0
-  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\r\n",
              clear[0], clear[1], clear[2], clear[3], clear[4], clear[5], clear[6], clear[7]));
 #endif
 
@@ -188,7 +188,7 @@ DesEncrypt( u_char *clear, /* IN  8 octets */
   Collapse(des_input, cipher);
 
 #if 0
-  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\r\n",
              cipher[0], cipher[1], cipher[2], cipher[3], cipher[4], cipher[5], cipher[6], cipher[7]));
 #endif
 }
@@ -208,14 +208,14 @@ DesEncrypt( u_char *clear, /* IN  8 octets */
   des_set_key(&des_key, key_schedule);
 
 #if 0
-  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet input : %02X%02X%02X%02X%02X%02X%02X%02X\r\n",
              clear[0], clear[1], clear[2], clear[3], clear[4], clear[5], clear[6], clear[7]));
 #endif
 
   des_ecb_encrypt((des_cblock *)clear, (des_cblock *)cipher, key_schedule, 1);
 
 #if 0
-  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("DesEncrypt: 8 octet output: %02X%02X%02X%02X%02X%02X%02X%02X\r\n",
              cipher[0], cipher[1], cipher[2], cipher[3], cipher[4], cipher[5], cipher[6], cipher[7]));
 #endif
 }
@@ -288,15 +288,15 @@ MakeKey( u_char *key,    /* IN  56 bit DES key missing parity bits */
   des_key[5] = Get7Bits(key, 35);
   des_key[6] = Get7Bits(key, 42);
   des_key[7] = Get7Bits(key, 49);
-  
+
 #ifndef USE_CRYPT
   des_set_odd_parity((des_cblock *)des_key);
 #endif
-  
+
 #if 0
-  CHAPDEBUG(LOG_INFO, ("MakeKey: 56-bit input : %02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("MakeKey: 56-bit input : %02X%02X%02X%02X%02X%02X%02X\r\n",
              key[0], key[1], key[2], key[3], key[4], key[5], key[6]));
-  CHAPDEBUG(LOG_INFO, ("MakeKey: 64-bit output: %02X%02X%02X%02X%02X%02X%02X%02X\n",
+  CHAPDEBUG(LOG_INFO, ("MakeKey: 64-bit output: %02X%02X%02X%02X%02X%02X%02X%02X\r\n",
              des_key[0], des_key[1], des_key[2], des_key[3], des_key[4], des_key[5], des_key[6], des_key[7]));
 #endif
 }
@@ -350,7 +350,7 @@ ChapMS_LANMan( char *rchallenge,
   int      i;
   u_char    UcasePassword[MAX_NT_PASSWORD]; /* max is actually 14 */
   u_char    PasswordHash[16];
-  
+
   /* LANMan password is case insensitive */
   BZERO(UcasePassword, sizeof(UcasePassword));
   for (i = 0; i < secret_len; i++) {
@@ -371,7 +371,7 @@ ChapMS( chap_state *cstate, char *rchallenge, int rchallenge_len, char *secret, 
 #endif
 
 #if 0
-  CHAPDEBUG(LOG_INFO, ("ChapMS: secret is '%.*s'\n", secret_len, secret));
+  CHAPDEBUG(LOG_INFO, ("ChapMS: secret is '%.*s'\r\n", secret_len, secret));
 #endif
   BZERO(&response, sizeof(response));
 

@@ -439,7 +439,7 @@ void sha1_hmac( const unsigned char *key, int keylen,
 /*
  * FIPS-180-1 test vectors
  */
-static unsigned char sha1_test_buf[3][57] = 
+static unsigned char sha1_test_buf[3][57] =
 {
     { "abc" },
     { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" },
@@ -563,17 +563,17 @@ int sha1_self_test( int verbose )
         if( memcmp( sha1sum, sha1_test_sum[i], 20 ) != 0 )
         {
             if( verbose != 0 )
-                printf( "failed\n" );
+                printf( "failed\r\n" );
 
             return( 1 );
         }
 
         if( verbose != 0 )
-            printf( "passed\n" );
+            printf( "passed\r\n" );
     }
 
     if( verbose != 0 )
-        printf( "\n" );
+        printf( "\r\n" );
 
     for( i = 0; i < 7; i++ )
     {
@@ -599,17 +599,17 @@ int sha1_self_test( int verbose )
         if( memcmp( sha1sum, sha1_hmac_test_sum[i], buflen ) != 0 )
         {
             if( verbose != 0 )
-                printf( "failed\n" );
+                printf( "failed\r\n" );
 
             return( 1 );
         }
 
         if( verbose != 0 )
-            printf( "passed\n" );
+            printf( "passed\r\n" );
     }
 
     if( verbose != 0 )
-        printf( "\n" );
+        printf( "\r\n" );
 
     return( 0 );
 }

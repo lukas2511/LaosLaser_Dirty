@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -44,7 +44,7 @@ SerialCircularBuf::SerialCircularBuf(int len) : m_readMode(false)
   m_len = len;
   m_pReadStart = m_pRead = m_buf;
   m_pWrite = m_buf;
-} 
+}
 
 SerialCircularBuf::~SerialCircularBuf()
 {
@@ -90,13 +90,13 @@ char SerialCircularBuf::read()
   //WARN: Must call len() before
   char c = *m_pRead;
   m_pRead++;
-  
+
   if(m_pRead>=m_buf+m_len)
     m_pRead=m_buf;
-    
+
   if(!m_readMode) //If readmode=false, trash this char
     m_pReadStart=m_pRead;
-    
+
   return c;
 }
 
@@ -124,10 +124,10 @@ void SerialCircularBuf::resetRead() //Go back to initial read position & return 
 
 SerialBuf::SerialBuf(int len) : m_rxBuf(len), m_txBuf(len), m_pSerial(NULL) //Buffer length
 #if NET_USB_SERIAL
-, m_pUsbSerial(NULL) 
+, m_pUsbSerial(NULL)
 #endif
 {
-  DBG("New Serial buf@%p\n", this);
+  DBG("New Serial buf@%p\r\n", this);
 }
 
 SerialBuf::~SerialBuf()
@@ -137,7 +137,7 @@ SerialBuf::~SerialBuf()
 
 void SerialBuf::attach(Serial* pSerial)
 {
-  DBG("Serial buf@%p in attach\n", this);
+  DBG("Serial buf@%p in attach\r\n", this);
   m_pSerial = pSerial;
   m_pSerial->attach<SerialBuf>(this, &SerialBuf::onRxInterrupt, Serial::RxIrq);
   m_pSerial->attach<SerialBuf>(this, &SerialBuf::onTxInterrupt, Serial::TxIrq);

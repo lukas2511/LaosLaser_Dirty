@@ -125,9 +125,9 @@ LaosMotion::LaosMotion()
     led1 = 1;
     i++;
     if ( i )
-      printf("%d PING...\n", t.read_ms());
+      printf("%d PING...\r\n", t.read_ms());
     else
-      printf("%d PONG...\n", t.read_ms());
+      printf("%d PONG...\r\n", t.read_ms());
     if ( i > 1 || i<0) i = 0;
     plan_buffer_line (&act[i]);
     led1 = 0;
@@ -194,7 +194,7 @@ void LaosMotion::moveTo(int x, int y, int z)
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  60.0 * cfg->speed;
    plan_buffer_line(&action);
-  // printf("To buffer: %d, %d\n", x, y);
+  // printf("To buffer: %d, %d\r\n", x, y);
 }
 
 /**
@@ -208,7 +208,7 @@ void LaosMotion::moveTo(int x, int y, int z, int speed)
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  (speed * 60.0 * cfg->speed) / 100;
    plan_buffer_line(&action);
-   //printf("To buffer: %d, %d\n", x, y);
+   //printf("To buffer: %d, %d\r\n", x, y);
 }
 
 /**
@@ -219,7 +219,7 @@ void LaosMotion::write(int i)
 {
   static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() )
-  //printf("Empty\n");
+  //printf("Empty\r\n");
   if ( step == 0 )
   {
     command = i;
@@ -302,7 +302,7 @@ void LaosMotion::write(int i)
                     break;
                   case 101:
                     power = val;
-                    printf("power: %d\n", power);
+                    printf("power: %d\r\n", power);
                     break;
                 }
                 break;
@@ -315,24 +315,24 @@ void LaosMotion::write(int i)
             }
             else if ( step == 2 )
             {
-           //   if ( queue() ) printf("Queue not empty... wait...\n\r");
+           //   if ( queue() ) printf("Queue not empty... wait...\r\n");
               while ( queue() );// printf("+"); // wait for queue to empty
               bitmap_width = i;
               bitmap_enable = 1;
               bitmap_size = (bitmap_bpp * bitmap_width) / 32;
               if  ( (bitmap_bpp * bitmap_width) % 32 )  // padd to next 32-bit
                 bitmap_size++;
-              // printf("\n\rBitmap: read %d dwords\n\r", bitmap_size);
+              // printf("\r\nBitmap: read %d dwords\r\n", bitmap_size);
 
             }
             else if ( step > 2 )// copy data
             {
               bitmap[ (step-3) % BITMAP_SIZE ] = i;
-			  // printf("[%ld] = %ld\n", (step-3) % BITMAP_SIZE, i);
+			  // printf("[%ld] = %ld\r\n", (step-3) % BITMAP_SIZE, i);
 			  if ( step-2 == bitmap_size ) // last dword received
               {
                 step = 0;
-                // printf("Bitmap: received %d dwords\n\r", bitmap_size);
+                // printf("Bitmap: received %d dwords\r\n", bitmap_size);
               }
             }
             break;
@@ -345,6 +345,140 @@ void LaosMotion::write(int i)
   }
 }
 
+
+/**
+*** simulate()
+*** Simulate Lasering
+**/
+void LaosMotion::simulate(int i)
+{
+  static int x=0,y=0,z=0,power=10000;
+  //if (  plan_queue_empty() )
+  //printf("Empty\r\n");
+  if ( step == 0 )
+  {
+    command = i;
+    step++;
+  }
+  else
+  {
+     switch( command )
+     {
+          case 0: // move x,y (laser off)
+          case 1: // line x,y (laser on)
+            switch ( step )
+            {
+              case 1:
+                action.target.x = i/1000.0;
+                break;
+              case 2:
+                action.target.y = i/1000.0;;
+                step=0;
+                action.target.z = 0;
+                action.param = power;
+                action.ActionType =  AT_MOVE;
+                if ( bitmap_enable)
+                {
+                  //action.ActionType = AT_BITMAP_SIMULATE; // FIXME // FIXME // FIXME //
+                  bitmap_enable = 0;
+                }
+                action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );
+                plan_buffer_line(&action);
+                break;
+            }
+            break;
+          case 2: // move z
+            switch(step)
+            {
+              case 1:
+                step = 0;
+                z = action.target.z = i/1000.0;;
+                action.param = power;
+                action.ActionType =  AT_MOVE;
+                action.target.feed_rate =  60.0 * cfg->speed;
+                plan_buffer_line(&action);
+                break;
+            }
+            break;
+         case 4: // set x,y,z (absolute)
+            switch ( step )
+            {
+              case 1:
+                x = i;
+                break;
+              case 2:
+                y = i;
+                break;
+              case 3:
+                z = i;
+                setPosition(x,y,z);
+                step=0;
+                break;
+            }
+            break;
+         case 5: // nop
+           step = 0;
+           break;
+         case 7: // set index,value
+            switch ( step )
+            {
+              case 1:
+                param = i;
+                break;
+              case 2:
+                val = i;
+                step = 0;
+                switch( param )
+                {
+                  case 100:
+                    if ( val < 1 ) val = 1;
+                    if ( val > 9999 ) val = 10000;
+                    mark_speed = val * cfg->speed / 10000;
+                    break;
+                  case 101:
+                    power = val;
+                    printf("power: %d\r\n", power);
+                    break;
+                }
+                break;
+            }
+            break;
+         case 9: // Store bitmap mark data format: 9 <bpp> <width> <data-0> <data-1> ... <data-n>
+            if ( step == 1 )
+            {
+              bitmap_bpp = i;
+            }
+            else if ( step == 2 )
+            {
+           //   if ( queue() ) printf("Queue not empty... wait...\r\n");
+              while ( queue() );// printf("+"); // wait for queue to empty
+              bitmap_width = i;
+              bitmap_enable = 1;
+              bitmap_size = (bitmap_bpp * bitmap_width) / 32;
+              if  ( (bitmap_bpp * bitmap_width) % 32 )  // padd to next 32-bit
+                bitmap_size++;
+              // printf("\r\nBitmap: read %d dwords\r\n", bitmap_size);
+
+            }
+            else if ( step > 2 )// copy data
+            {
+              bitmap[ (step-3) % BITMAP_SIZE ] = i;
+        // printf("[%ld] = %ld\r\n", (step-3) % BITMAP_SIZE, i);
+        if ( step-2 == bitmap_size ) // last dword received
+              {
+                step = 0;
+                // printf("Bitmap: received %d dwords\r\n", bitmap_size);
+              }
+            }
+            break;
+         default: // I do not understand: stop motion
+            step = 0;
+            break;
+    }
+    if ( step )
+    step++;
+  }
+}
 
 /**
 *** Return true if start button is pressed
@@ -392,6 +526,14 @@ void LaosMotion::setOrigin(int x, int y, int z)
 }
 
 
+/**
+*** This functions disables some safety functions on Lasersaur stuff (for homing)
+**/
+void LaosMotion::overrideSafety(bool enable)
+{
+  DigitalOut overrider(p30);
+  overrider=enable;
+}
 
 
 /**
@@ -400,13 +542,13 @@ void LaosMotion::setOrigin(int x, int y, int z)
 void LaosMotion::home(int x, int y, int z)
 {
   int i=0;
-  printf("Homing %d,%d, %d with speed %d\n", x, y, z, cfg->homespeed);
+  printf("Homing %d,%d, %d with speed %d\r\n", x, y, z, cfg->homespeed);
   xdir = cfg->xhomedir;
   ydir = cfg->yhomedir;
   zdir = cfg->zhomedir;
   led1 = 0;
   isHome = false;
-  printf("Home Z...\n\r");
+  printf("Home Z...\r\n");
   if (cfg->autozhome) {
     while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
         zstep = 0;
@@ -415,7 +557,7 @@ void LaosMotion::home(int x, int y, int z)
         wait(cfg->homespeed/1E6);
     }
   }
-  printf("Home XY...\n\r");
+  printf("Home XY...\r\n");
   while ( 1 )
   {
     xstep = ystep = 0;
@@ -432,7 +574,7 @@ void LaosMotion::home(int x, int y, int z)
       setPosition(x,y,z);
       moveTo(x,y,z);
       isHome = true;
-      printf("Home done.\n\r");
+      printf("Home done.\r\n");
       return;
     }
   }

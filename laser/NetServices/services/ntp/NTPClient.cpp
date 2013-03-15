@@ -1,17 +1,17 @@
 #pragma diag_remark 1293
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -69,7 +69,7 @@ NTPResult NTPClient::setTime(const Host& host, void (*pMethod)(NTPResult)) //Non
 }
 
 #if 0 //For doc only
-template<class T> 
+template<class T>
 NTPResult NTPClient::setTime(const Host& host, T* pItem, void (T::*pMethod)(NTPResult)) //Non blocking
 {
   setOnResult(pItem, pMethod);
@@ -137,13 +137,13 @@ void NTPClient::init() //Create and setup socket if needed
   m_pUDPSocket = new UDPSocket;
   m_pUDPSocket->setOnEvent(this, &NTPClient::onUDPSocketEvent);
   m_closed = false;
-  DBG("NTPClient: Init OK\n");
+  DBG("NTPClient: Init OK\r\n");
 }
 
 void NTPClient::open()
 {
   resetTimeout();
-  DBG("Opening connection\n");
+  DBG("Opening connection\r\n");
   m_state = NTP_PING;
   Host localhost(IpAddr(), NTP_CLIENT_PORT, "localhost"); //Any local address
   m_pUDPSocket->bind(localhost);
@@ -156,7 +156,7 @@ void NTPClient::process() //Main state-machine
 {
   int len;
   Host host;
-  
+
   switch(m_state)
   {
   case NTP_PING:
@@ -168,18 +168,18 @@ void NTPClient::process() //Main state-machine
     m_pkt.stratum = 0; //Not relevant here
     m_pkt.poll = 0; //Not significant as well
     m_pkt.precision = 0; //Neither this one is
-    
+
     m_pkt.rootDelay = 0; //Or this one
     m_pkt.rootDispersion = 0; //Or that one
     m_pkt.refId = 0; //...
-    
+
     m_pkt.refTm_s = 0;
     m_pkt.origTm_s = 0;
     m_pkt.rxTm_s = 0;
     m_pkt.txTm_s = htonl( NTP_TIMESTAMP_DELTA + time(NULL) ); //WARN: We are in LE format, network byte order is BE
-    
+
     m_pkt.refTm_f = m_pkt.origTm_f = m_pkt.rxTm_f = m_pkt.txTm_f = 0;
-    
+
     #ifdef __DEBUG
     //Hex Dump:
     DBG("\r\nDump Tx:\r\n");
@@ -187,17 +187,17 @@ void NTPClient::process() //Main state-machine
     {
       DBG("%02x ", *((char*)&m_pkt + i));
     }
-    DBG("\r\n\r\n");
+    DBG("\r\r\n\r\n");
     #endif
-    
+
     len = m_pUDPSocket->sendto( (char*)&m_pkt, sizeof(NTPPacket), &m_host );
     if(len < sizeof(NTPPacket))
       { onResult(NTP_PRTCL); close(); return; }
-      
-    m_state = NTP_PONG; 
-          
+
+    m_state = NTP_PONG;
+
     break;
-  
+
   case NTP_PONG:
     DBG("\r\nPong\r\n");
     while( len = m_pUDPSocket->recvfrom( (char*)&m_pkt, sizeof(NTPPacket), &host ) )
@@ -209,16 +209,16 @@ void NTPClient::process() //Main state-machine
       if( len > 0 )
         break;
     }
-    
+
     if(len == 0)
       return; //Wait for the next packet
-    
+
     if(len < 0)
       { onResult(NTP_PRTCL); close(); return; }
-    
+
     if(len < sizeof(NTPPacket)) //TODO: Accept chunks
       { onResult(NTP_PRTCL); close(); return; }
-      
+
     #ifdef __DEBUG
     //Hex Dump:
     DBG("\r\nDump Rx:\r\n");
@@ -226,14 +226,14 @@ void NTPClient::process() //Main state-machine
     {
       DBG("%02x ", *((char*)&m_pkt + i));
     }
-    DBG("\r\n\r\n");
+    DBG("\r\r\n\r\n");
     #endif
-      
+
     if( m_pkt.stratum == 0)  //Kiss of death message : Not good !
     {
       onResult(NTP_PRTCL); close(); return;
     }
-    
+
     //Correct Endianness
     m_pkt.refTm_s = ntohl( m_pkt.refTm_s );
     m_pkt.refTm_f = ntohl( m_pkt.refTm_f );
@@ -243,7 +243,7 @@ void NTPClient::process() //Main state-machine
     m_pkt.rxTm_f = ntohl( m_pkt.rxTm_f );
     m_pkt.txTm_s = ntohl( m_pkt.txTm_s );
     m_pkt.txTm_f = ntohl( m_pkt.txTm_f );
-    
+
     //Compute offset, see RFC 4330 p.13
     uint32_t destTm_s = (NTP_TIMESTAMP_DELTA + time(NULL));
     //int32_t origTm = (int32_t) ((uint64_t) m_pkt.origTm - NTP_TIMESTAMP_DELTA); //Convert in local 32 bits timestamps
@@ -255,10 +255,10 @@ void NTPClient::process() //Main state-machine
     DBG("\r\nOffset: %d\r\n", offset);
     //Set time accordingly
     set_time( time(NULL) + (offset /*>> 32*/) );
-    
+
     onResult(NTP_OK);
     close();
-      
+
     break;
   }
 }
@@ -287,7 +287,7 @@ void NTPClient::onDNSReply(DNSReply r)
     DBG("\r\nWARN: Discarded\r\n");
     return;
   }
-  
+
   if( r != DNS_FOUND )
   {
     DBG("\r\nCould not resolve hostname.\r\n");
@@ -301,7 +301,7 @@ void NTPClient::onDNSReply(DNSReply r)
   m_pDnsReq=NULL;
   open();
 }
-  
+
 void NTPClient::onUDPSocketEvent(UDPSocketEvent e)
 {
   resetTimeout();

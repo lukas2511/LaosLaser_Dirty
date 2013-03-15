@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,17 +35,17 @@ extern "C"
 
 LwipNetDnsRequest::LwipNetDnsRequest(const char* hostname) : NetDnsRequest(hostname), m_state(LWIPNETDNS_START), m_cbFired(false), m_closing(false)
 {
-  DBG("New LwipNetDnsRequest %p\n", this);
+  DBG("New LwipNetDnsRequest %p\r\n", this);
 }
 
 LwipNetDnsRequest::LwipNetDnsRequest(Host* pHost) : NetDnsRequest(pHost), m_state(LWIPNETDNS_START), m_cbFired(false), m_closing(false)
 {
-  DBG("New LwipNetDnsRequest %p\n", this);
+  DBG("New LwipNetDnsRequest %p\r\n", this);
 }
 
 LwipNetDnsRequest::~LwipNetDnsRequest()
 {
-  DBG("LwipNetDnsRequest %p destroyed\n", this);
+  DBG("LwipNetDnsRequest %p destroyed\r\n", this);
 }
 
 /*
@@ -67,16 +67,16 @@ void LwipNetDnsRequest::poll()
     {
       m_ip = IpAddr(&ipStruct);
       m_state = LWIPNETDNS_OK;
-      DBG("DNS: Ip found in cache.\n");
+      DBG("DNS: Ip found in cache.\r\n");
     }
     else if( err == ERR_INPROGRESS)
     {
-      DBG("DNS: Processing.\n");
+      DBG("DNS: Processing.\r\n");
       m_state = LWIPNETDNS_PROCESSING;
     }
     else //Likely ERR_VAL
     {
-      DBG("DNS: Error on init.\n");
+      DBG("DNS: Error on init.\r\n");
       m_state = LWIPNETDNS_ERROR;
     }
     break;
@@ -85,7 +85,7 @@ void LwipNetDnsRequest::poll()
   case LWIPNETDNS_OK:
     if(!m_cbFired)
     {
-      DBG("DNS: Ip found.\n");
+      DBG("DNS: Ip found.\r\n");
       m_cbFired = true;
       onReply(NETDNS_FOUND); //Raise callback
     }
@@ -93,34 +93,34 @@ void LwipNetDnsRequest::poll()
   case LWIPNETDNS_NOTFOUND:
     if(!m_cbFired)
     {
-      DBG("DNS: could not be resolved.\n");
+      DBG("DNS: could not be resolved.\r\n");
       m_cbFired = true;
       onReply(NETDNS_NOTFOUND); //Raise callback
-    }  
-    break;  
+    }
+    break;
   case LWIPNETDNS_ERROR:
   default:
     if(!m_cbFired)
     {
-      DBG("DNS: Error.\n");
+      DBG("DNS: Error.\r\n");
       m_cbFired = true;
       onReply(NETDNS_ERROR); //Raise callback
-    }  
-    break; 
+    }
+    break;
   }
   if(m_closing && (m_state!=LWIPNETDNS_PROCESSING)) //Check wether the closure has been reqd
   {
-    DBG("LwipNetDnsRequest: Closing in poll()\n");
+    DBG("LwipNetDnsRequest: Closing in poll()\r\n");
     NetDnsRequest::close();
   }
 }
 
 void LwipNetDnsRequest::close()
 {
-  DBG("LwipNetDnsRequest: Close req\n");
+  DBG("LwipNetDnsRequest: Close req\r\n");
   if(m_state!=LWIPNETDNS_PROCESSING)
   {
-    DBG("LwipNetDnsRequest: Closing in close()\n");
+    DBG("LwipNetDnsRequest: Closing in close()\r\n");
     NetDnsRequest::close();
   }
   else //Cannot close rightaway, waiting for callback from underlying layer
@@ -133,11 +133,11 @@ void LwipNetDnsRequest::foundCb(const char *name, ip_addr_t *ipaddr)
 {
   if( ipaddr == NULL )
   {
-    DBG("LwipNetDnsRequest: Callback: Name not found\n");
+    DBG("LwipNetDnsRequest: Callback: Name not found\r\n");
     m_state = LWIPNETDNS_NOTFOUND;
     return;
   }
-  DBG("LwipNetDnsRequest: Callback: Resolved\n");
+  DBG("LwipNetDnsRequest: Callback: Resolved\r\n");
   m_ip = IpAddr(ipaddr);
   m_state = LWIPNETDNS_OK;
 }
@@ -145,7 +145,7 @@ void LwipNetDnsRequest::foundCb(const char *name, ip_addr_t *ipaddr)
 
 void LwipNetDnsRequest::sFoundCb(const char *name, ip_addr_t *ipaddr, void *arg)
 {
-  DBG("LwipNetDnsRequest: Static callback\n");
+  DBG("LwipNetDnsRequest: Static callback\r\n");
   LwipNetDnsRequest* pMe = (LwipNetDnsRequest*) arg;
   return pMe->foundCb( name, ipaddr );
 }

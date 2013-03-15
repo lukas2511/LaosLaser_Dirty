@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,7 +27,7 @@ THE SOFTWARE.
 //#define __DEBUG
 #include "dbg/dbg.h"
 
-HTTPMap::HTTPMap(const string& keyValueSep /*= "="*/, const string& pairSep /*= "&"*/) : 
+HTTPMap::HTTPMap(const string& keyValueSep /*= "="*/, const string& pairSep /*= "&"*/) :
 HTTPData(), Dictionary(), m_buf(), m_len(0), m_chunked(false), m_keyValueSep(keyValueSep), m_pairSep(pairSep)
 {
 
@@ -53,14 +53,14 @@ int HTTPMap::read(char* buf, int len)
 int HTTPMap::write(const char* buf, int len)
 {
   m_buf.append( buf, len );
-  if( ( m_chunked && !len ) || 
+  if( ( m_chunked && !len ) ||
   ( !m_chunked && ( m_buf.length() >= m_len ) ) ) //Last chunk or EOF
   {
     parseString();
   }
   return len;
 }
-  
+
 string HTTPMap::getDataType() //Internet media type for Content-Type header
 {
   return "application/x-www-form-urlencoded";
@@ -70,7 +70,7 @@ void HTTPMap::setDataType(const string& type) //Internet media type from Content
 {
   //Do not really care here
 }
-  
+
 int HTTPMap::getDataLen() //For Content-Length header
 {
   //This will be called before any read occurs, so let's generate our string object
@@ -123,15 +123,15 @@ void HTTPMap::parseString()
 {
   string key;
   string value;
-  
+
   int pos = 0;
-  
+
   int key_pos;
   int key_len;
-  
+
   int value_pos;
   int value_len;
-  
+
   bool eof = false;
   while(!eof)
   {
@@ -142,26 +142,26 @@ void HTTPMap::parseString()
       //Parse error, break
       break;
     }
-    
+
     key_len = value_pos - key_pos;
-    
+
     value_pos+= m_keyValueSep.length();
-    
+
     pos = m_buf.find( m_pairSep, value_pos );
     if(pos < 0) //Not found
     {
       pos = m_buf.length();
       eof = true;
     }
-    
+
     value_len = pos - value_pos;
-    
+
     pos += m_pairSep.length();
-    
+
     //Append elenent
     Dictionary::operator[]( Url::decode( m_buf.substr(key_pos, key_len) ) ) = Url::decode( m_buf.substr(value_pos, value_len) );
   }
-  
+
   m_buf.clear(); //Free data
-  
+
 }

@@ -40,7 +40,7 @@ SMTPClient::SMTPClient() : NetService(false) /*Not owned by the pool*/,
         m_posInMsg(0), m_blockingResult(SMTP_PROCESSING),
         m_username(""), m_password(""), m_auth(SMTP_AUTH_NONE),
         m_heloDomain("localhost") {
-    DBG("New SMTPClient %p\n", this);
+    DBG("New SMTPClient %p\r\n", this);
 }
 
 SMTPClient::SMTPClient(const Host& host, const char* heloDomain, const char* user, const char* password, SMTPAuth auth) : NetService(false),
@@ -50,7 +50,7 @@ SMTPClient::SMTPClient(const Host& host, const char* heloDomain, const char* use
         m_posInMsg(0), m_blockingResult(SMTP_PROCESSING),
         m_username(string(user)), m_password(string(password)), m_auth(auth),
         m_heloDomain(heloDomain) {
-    DBG("New SMTPClient %p\n", this);
+    DBG("New SMTPClient %p\r\n", this);
 }
 
 SMTPClient::~SMTPClient() {
@@ -166,7 +166,7 @@ void SMTPClient::setup(EmailMessage* pMessage) { //Setup request, make DNS Req i
     //If port set to zero then use default port
     if (!m_server.getPort()) {
         m_server.setPort(SMTP_PORT);
-        DBG("Using default port %d\n", SMTP_PORT);
+        DBG("Using default port %d\r\n", SMTP_PORT);
     }
 
     if (m_server.getIp().isNull()) {
@@ -183,16 +183,16 @@ void SMTPClient::setup(EmailMessage* pMessage) { //Setup request, make DNS Req i
 
 void SMTPClient::connect() { //Start Connection
     resetTimeout();
-    DBG("Connecting...\n");
+    DBG("Connecting...\r\n");
     m_pTCPSocket->connect(m_server);
 }
 
 void SMTPClient::onTCPSocketEvent(TCPSocketEvent e) {
 
-    DBG("Event %d in SMTPClient::onTCPSocketEvent()\n", e);
+    DBG("Event %d in SMTPClient::onTCPSocketEvent()\r\n", e);
 
     if (m_closed) {
-        DBG("WARN: Discarded\n");
+        DBG("WARN: Discarded\r\n");
         return;
     }
 
@@ -209,13 +209,13 @@ void SMTPClient::onTCPSocketEvent(TCPSocketEvent e) {
         case TCPSOCKET_CONRST:
         case TCPSOCKET_CONABRT:
         case TCPSOCKET_ERROR:
-            DBG("Connection error in SMTP Client.\n");
+            DBG("Connection error in SMTP Client.\r\n");
             close();
             onResult(SMTP_DISC);
             break;
         case TCPSOCKET_DISCONNECTED:
             if (m_state != SMTP_BYE) {
-                DBG("Connection error in SMTP Client.\n");
+                DBG("Connection error in SMTP Client.\r\n");
                 close();
                 onResult(SMTP_DISC);
             }
@@ -225,18 +225,18 @@ void SMTPClient::onTCPSocketEvent(TCPSocketEvent e) {
 
 void SMTPClient::onDNSReply(DNSReply r) {
     if (m_closed) {
-        DBG("WARN: Discarded\n");
+        DBG("WARN: Discarded\r\n");
         return;
     }
 
     if ( r != DNS_FOUND ) {
-        DBG("Could not resolve hostname.\n");
+        DBG("Could not resolve hostname.\r\n");
         close();
         onResult(SMTP_DNS);
         return;
     }
 
-    DBG("DNS Resolved to %d.%d.%d.%d\n", m_server.getIp()[0], m_server.getIp()[1], m_server.getIp()[2], m_server.getIp()[3]);
+    DBG("DNS Resolved to %d.%d.%d.%d\r\n", m_server.getIp()[0], m_server.getIp()[1], m_server.getIp()[2], m_server.getIp()[3]);
     //If no error, m_server has been updated by m_pDnsReq so we're set to go !
     m_pDnsReq->close();
     delete m_pDnsReq;
@@ -253,7 +253,7 @@ void SMTPClient::onResult(SMTPResult r) { //Called when exchange completed or on
 }
 
 void SMTPClient::onTimeout() { //Connection has timed out
-    DBG("Timed out.\n");
+    DBG("Timed out.\r\n");
     close();
     onResult(SMTP_TIMEOUT);
 }
@@ -285,7 +285,7 @@ bool SMTPClient::okPostAuthentication(int code) {
 
 void SMTPClient::process(bool writeable) { //Main state-machine
 
-    DBG("In state %d, writeable %d\n", m_state, writeable);
+    DBG("In state %d, writeable %d\r\n", m_state, writeable);
 
     // If writeable but nothing to write then return
     if (writeable && (m_state != SMTP_BODYMORE))
@@ -389,17 +389,17 @@ void SMTPClient::process(bool writeable) { //Main state-machine
                             break;
                         case '\r':
                             if (m_posInCRLF == 1) // two CR in a row, so insert an LF first
-                                buf[sendLen++] = '\n';
+                                buf[sendLen++] = '\r\n';
                             m_posInCRLF = 1;
                             break;
-                        case '\n':
+                        case '\r\n':
                             if (m_posInCRLF != 1) // convert naked LF to CRLF
                                 buf[sendLen++] = '\r';
                             m_posInCRLF = 2;
                             break;
                         default:
                             if (m_posInCRLF == 1) { // convert naked CR to CRLF
-                                buf[sendLen++] = '\n';
+                                buf[sendLen++] = '\r\n';
                                 m_posInCRLF = 2;
                             } else
                                 m_posInCRLF = 0; // we're  no longer at the start of a line
@@ -410,12 +410,12 @@ void SMTPClient::process(bool writeable) { //Main state-machine
                         break;
                 }
                 m_pTCPSocket->send( buf, sendLen );
-                DBG("Sending %d bytes of processed message content\n", sendLen);
+                DBG("Sending %d bytes of processed message content\r\n", sendLen);
             } else {
                 if (m_posInCRLF == 0)
                     snprintf(buf, BUF_SIZE, "\r\n.\r\n");
                 else if (m_posInCRLF == 1)
-                    snprintf(buf, BUF_SIZE, "\n.\r\n");
+                    snprintf(buf, BUF_SIZE, "\r\n.\r\n");
                 else
                     snprintf(buf, BUF_SIZE, ".\r\n");
                 m_state = SMTP_EOF;

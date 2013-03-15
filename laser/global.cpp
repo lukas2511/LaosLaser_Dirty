@@ -18,7 +18,7 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with LaOS.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 #include "global.h"
 #include "ConfigFile.h"
@@ -28,7 +28,7 @@
 /**
 *** Return a IpAddress, from a string in the format: ppp.qqq.rrr.sss
 **/
-void IpParse(char *a, int i[]) 
+void IpParse(char *a, int i[])
 {
     int n = 0, j;
     char c[4];
@@ -38,7 +38,7 @@ void IpParse(char *a, int i[])
         while (*a && (*a < '0' || *a > '9'))
             a++;
         j = 0;
-        while (*a && *a >= '0' && *a <= '9') 
+        while (*a && *a >= '0' && *a <= '9')
         {
             if ( j<3 )
                 c[j++] = *a;
@@ -48,8 +48,8 @@ void IpParse(char *a, int i[])
         i[n] = atoi(c);
     }
 }
- 
- 
+
+
 /**
 *** Global config
 *** Config settings into global Config struct
@@ -59,11 +59,11 @@ GlobalConfig::GlobalConfig(char *filename)
    char val[32];
    printf("\r\nOpen config file: '%s'\r\n", filename);
    ConfigFile cfg(filename);
-    if ( !cfg.IsOpen() ) 
+    if ( !cfg.IsOpen() )
     {
-      printf("File does not exists. Using defaults\n");
+      printf("File does not exists. Using defaults\r\n");
     }
-    
+
     // IP settings
     cfg.Value("net.ip", val, sizeof(val), "192.168.0.111");
     IpParse(val, ip);
@@ -82,14 +82,14 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("sys.nodisplay", &nodisplay, 1);
     cfg.Value("sys.i2cbaud", &i2cbaud, 9600);
     cfg.Value("sys.cleandir", &cleandir, 1);
-    
+
     // Laser
     cfg.Value("laser.enable", &lenable, 1); // laser enable polarity [0/1]
     cfg.Value("laser.on", &lon, 1);         // laser on polarity [0/1]
     cfg.Value("laser.pwm.min", &pwmmin, 0); // pwm at minimum power [0..100]
     cfg.Value("laser.pwm.max", &pwmmax, 0); // pwm at maximum power [0..100]
-    cfg.Value("laser.pwm.freq", &pwmfreq, 20000); // pwm frequency [Hz]  
-    
+    cfg.Value("laser.pwm.freq", &pwmfreq, 20000); // pwm frequency [Hz]
+
     // rest position (after homing)
     cfg.Value("x.rest", &xrest, 0);
     cfg.Value("y.rest", &yrest, 0);
@@ -112,40 +112,40 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("y.pol", &ypol, 0);
     cfg.Value("z.pol", &zpol, 0);
     cfg.Value("e.pol", &epol, 0);
-    
+
     // Scaling [steps/meter]
     cfg.Value("x.scale", &xscale, 200000);
     cfg.Value("y.scale", &yscale, 200000);
     cfg.Value("z.scale", &zscale, 200000);
     cfg.Value("e.scale", &escale, 200000);
-   
+
     // max axis speed [mm/sec]
     cfg.Value("x.speed", &xspeed, 100);
     cfg.Value("y.speed", &yspeed, 100);
     cfg.Value("z.speed", &zspeed, 100);
     cfg.Value("e.speed", &espeed, 100);
-   
+
     // home positions [um]
     cfg.Value("x.home", &xhome, 0);
     cfg.Value("y.home", &yhome, 0);
     cfg.Value("z.home", &zhome, 100000);
     cfg.Value("e.home", &ehome, 0);
-     
+
     // min and max [um]
     cfg.Value("x.max", &xmax, 1E6);
     cfg.Value("y.max", &ymax, 1E6);
     cfg.Value("z.max", &zmax, 200000);
-    cfg.Value("e.max", &emax, 1E6); 
-    cfg.Value("x.min", &xmin, 0); 
-    cfg.Value("y.min", &ymin, 0); 
+    cfg.Value("e.max", &emax, 1E6);
+    cfg.Value("x.min", &xmin, 0);
+    cfg.Value("y.min", &ymin, 0);
     cfg.Value("z.min", &zmin, 0);
-    cfg.Value("e.min", &emin, 0); 
-        
-    // motion settings: enable output state    
-    cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [mm/sec]     
-    cfg.Value("motion.speed", &speed, 100);   // max speed [mm/sec] 
-    cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2] 
+    cfg.Value("e.min", &emin, 0);
+
+    // motion settings: enable output state
+    cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [mm/sec]
+    cfg.Value("motion.speed", &speed, 100);   // max speed [mm/sec]
+    cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2]
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]
-    cfg.Value("motion.tolerance", &tolerance, 50); // cornering tolerance [1/1000 units]     
+    cfg.Value("motion.tolerance", &tolerance, 50); // cornering tolerance [1/1000 units]
 }
 

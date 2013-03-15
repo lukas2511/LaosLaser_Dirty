@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,10 +52,10 @@ static UsbHostMgr* pMgr = NULL;
 
 extern "C" void sUsbIrqhandler(void) __irq
 {
-  DBG("\n+Int\n");
+  DBG("\r\n+Int\r\n");
   if(pMgr)
     pMgr->UsbIrqhandler();
-  DBG("\n-Int\n");
+  DBG("\r\n-Int\r\n");
   return;
 }
 
@@ -67,7 +67,7 @@ UsbHostMgr::UsbHostMgr() : m_lpDevices()
   memset(m_lpDevices, NULL, sizeof(UsbDevice*) * USB_HOSTMGR_MAX_DEVS);
   m_pHcca = (HCCA*) usb_get_hcca();
   memset((void*)m_pHcca, 0, 0x100);
-  DBG("Host manager at %p\n", this);
+  DBG("Host manager at %p\r\n", this);
 }
 
 UsbHostMgr::~UsbHostMgr()
@@ -79,11 +79,11 @@ UsbHostMgr::~UsbHostMgr()
 UsbErr UsbHostMgr::init() //Initialize host
 {
   NVIC_DisableIRQ(USB_IRQn);                           /* Disable the USB interrupt source           */
-  
+
   LPC_SC->PCONP       &= ~(1UL<<31); //Cut power
   wait(1);
-  
-  
+
+
   // turn on power for USB
   LPC_SC->PCONP       |= (1UL<<31);
   // Enable USB host clock, port selection and AHB clock
@@ -91,7 +91,7 @@ UsbErr UsbHostMgr::init() //Initialize host
   // Wait for clocks to become available
   while ((LPC_USB->USBClkSt & CLOCK_MASK) != CLOCK_MASK)
       ;
-  
+
   // it seems the bits[0:1] mean the following
   // 0: U1=device, U2=host
   // 1: U1=host, U2=host
@@ -100,32 +100,32 @@ UsbErr UsbHostMgr::init() //Initialize host
   // NB: this register is only available if OTG clock (aka "port select") is enabled!!
   // since we don't care about port 2, set just bit 0 to 1 (U1=host)
   LPC_USB->OTGStCtrl |= 1;
-  
+
   // now that we've configured the ports, we can turn off the portsel clock
   LPC_USB->USBClkCtrl &= ~PORTSEL_CLK_EN;
-  
+
   // power pins are not connected on mbed, so we can skip them
   /* P1[18] = USB_UP_LED, 01 */
   /* P1[19] = /USB_PPWR,     10 */
   /* P1[22] = USB_PWRD, 10 */
   /* P1[27] = /USB_OVRCR, 10 */
-  /*LPC_PINCON->PINSEL3 &= ~((3<<4) | (3<<6) | (3<<12) | (3<<22));  
+  /*LPC_PINCON->PINSEL3 &= ~((3<<4) | (3<<6) | (3<<12) | (3<<22));
   LPC_PINCON->PINSEL3 |=  ((1<<4)|(2<<6) | (2<<12) | (2<<22));   // 0x00802080
   */
 
   // configure USB D+/D- pins
   /* P0[29] = USB_D+, 01 */
   /* P0[30] = USB_D-, 01 */
-  LPC_PINCON->PINSEL1 &= ~((3<<26) | (3<<28));  
+  LPC_PINCON->PINSEL1 &= ~((3<<26) | (3<<28));
   LPC_PINCON->PINSEL1 |=  ((1<<26)|(1<<28));     // 0x14000000
-      
-  DBG("Initializing Host Stack\n");
-  
+
+  DBG("Initializing Host Stack\r\n");
+
   wait_ms(100);                                   /* Wait 50 ms before apply reset              */
   LPC_USB->HcControl       = 0;                       /* HARDWARE RESET                             */
   LPC_USB->HcControlHeadED = 0;                       /* Initialize Control list head to Zero       */
   LPC_USB->HcBulkHeadED    = 0;                       /* Initialize Bulk list head to Zero          */
-  
+
                                                       /* SOFTWARE RESET                             */
   LPC_USB->HcCommandStatus = OR_CMD_STATUS_HCR;
   LPC_USB->HcFmInterval    = DEFAULT_FMINTERVAL;      /* Write Fm Interval and Largest Data Packet Counter */
@@ -133,7 +133,7 @@ UsbErr UsbHostMgr::init() //Initialize host
                                                       /* Put HC in operational state                */
   LPC_USB->HcControl  = (LPC_USB->HcControl & (~OR_CONTROL_HCFS)) | OR_CONTROL_HC_OPER;
   LPC_USB->HcRhStatus = OR_RH_STATUS_LPSC;            /* Set Global Power                           */
-  
+
   LPC_USB->HcHCCA = (uint32_t)(m_pHcca);
   LPC_USB->HcInterruptStatus |= LPC_USB->HcInterruptStatus;                   /* Clear Interrrupt Status                    */
 
@@ -147,19 +147,19 @@ UsbErr UsbHostMgr::init() //Initialize host
   NVIC_SetVector(USB_IRQn, (uint32_t)(sUsbIrqhandler));
   LPC_USB->HcRhPortStatus1 = OR_RH_PORT_CSC;
   LPC_USB->HcRhPortStatus1 = OR_RH_PORT_PRSC;
-  
+
   /* Check for any connected devices */
   if (LPC_USB->HcRhPortStatus1 & OR_RH_PORT_CCS)  //Root device connected
   {
     //Device connected
     wait(1);
-    DBG("Device connected (%08x)\n", LPC_USB->HcRhPortStatus1);
+    DBG("Device connected (%08x)\r\n", LPC_USB->HcRhPortStatus1);
     onUsbDeviceConnected(0, 1); //Hub 0 (root hub), Port 1 (count starts at 1)
   }
-  
-  DBG("Enabling IRQ\n");
+
+  DBG("Enabling IRQ\r\n");
   NVIC_EnableIRQ(USB_IRQn);
-  DBG("End of host stack initialization\n");
+  DBG("End of host stack initialization\r\n");
   return USBERR_OK;
 }
 
@@ -170,10 +170,10 @@ void UsbHostMgr::poll() //Enumerate connected devices, etc
   {
     //Device connected
     wait(1);
-    DBG("Device connected (%08x)\n", LPC_USB->HcRhPortStatus1);
+    DBG("Device connected (%08x)\r\n", LPC_USB->HcRhPortStatus1);
     onUsbDeviceConnected(0, 1); //Hub 0 (root hub), Port 1 (count starts at 1)
   }
-  
+
   for(int i = 0; i < devicesCount(); i++)
   {
     if( (m_lpDevices[i]->m_connected)
@@ -201,7 +201,7 @@ UsbDevice* UsbHostMgr::getDevice(int item)
   UsbDevice* pDev = m_lpDevices[item];
   if(!pDev)
     return NULL;
-    
+
   pDev->m_refs++;
   return pDev;
 }
@@ -229,7 +229,7 @@ void UsbHostMgr::UsbIrqhandler()
 {
   uint32_t   int_status;
   uint32_t   ie_status;
-  
+
   int_status    = LPC_USB->HcInterruptStatus;                          /* Read Interrupt Status                */
   ie_status     = LPC_USB->HcInterruptEnable;                          /* Read Interrupt enable status         */
 
@@ -242,7 +242,7 @@ void UsbHostMgr::UsbIrqhandler()
     int_status = int_status & ie_status;
     if (int_status & OR_INTR_STATUS_RHSC) /* Root hub status change interrupt     */
     {
-      DBG("LPC_USB->HcRhPortStatus1 = %08x\n", LPC_USB->HcRhPortStatus1);
+      DBG("LPC_USB->HcRhPortStatus1 = %08x\r\n", LPC_USB->HcRhPortStatus1);
       if (LPC_USB->HcRhPortStatus1 & OR_RH_PORT_CSC)
       {
         if (LPC_USB->HcRhStatus & OR_RH_STATUS_DRWE)
@@ -262,13 +262,13 @@ void UsbHostMgr::UsbIrqhandler()
           if (LPC_USB->HcRhPortStatus1 & OR_RH_PORT_CCS)  //Root device connected
           {
             //Device connected
-            DBG("Device connected (%08x)\n", LPC_USB->HcRhPortStatus1);
+            DBG("Device connected (%08x)\r\n", LPC_USB->HcRhPortStatus1);
             onUsbDeviceConnected(0, 1); //Hub 0 (root hub), Port 1 (count starts at 1)
           }
           else //Root device disconnected
           {
             //Device disconnected
-            DBG("Device disconnected\n");
+            DBG("Device disconnected\r\n");
             onUsbDeviceDisconnected(0, 1);
           }
           //TODO: HUBS
@@ -279,9 +279,9 @@ void UsbHostMgr::UsbIrqhandler()
       {
         LPC_USB->HcRhPortStatus1 = OR_RH_PORT_PRSC;
       }
-    }  
+    }
     if (int_status & OR_INTR_STATUS_WDH) /* Writeback Done Head interrupt        */
-    {                  
+    {
       //UsbEndpoint::sOnCompletion((LPC_USB->HccaDoneHead) & 0xFE);
       if(m_pHcca->DoneHead)
       {
@@ -289,13 +289,13 @@ void UsbHostMgr::UsbIrqhandler()
         m_pHcca->DoneHead = 0;
         LPC_USB->HcInterruptStatus = OR_INTR_STATUS_WDH;
         if(m_pHcca->DoneHead)
-          DBG("??????????????????????????????\n\n\n");
+          DBG("??????????????????????????????\r\n\r\n\r\n");
       }
       else
       {
         //Probably an error
         int_status = LPC_USB->HcInterruptStatus;
-        DBG("HcInterruptStatus = %08x\n", int_status);
+        DBG("HcInterruptStatus = %08x\r\n", int_status);
         if (int_status & OR_INTR_STATUS_UE) //Unrecoverable error, disconnect devices and resume
         {
           onUsbDeviceDisconnected(0, 1);
@@ -345,23 +345,23 @@ void UsbHostMgr::onUsbDeviceDisconnected(int hub, int port)
 
 void UsbHostMgr::resetPort(int hub, int port)
 {
-  DBG("Resetting hub %d, port %d\n", hub, port);
+  DBG("Resetting hub %d, port %d\r\n", hub, port);
   if(hub == 0) //Root hub
   {
     wait_ms(100); /* USB 2.0 spec says at least 50ms delay before port reset */
     LPC_USB->HcRhPortStatus1 = OR_RH_PORT_PRS; // Initiate port reset
-    DBG("Before loop\n");
+    DBG("Before loop\r\n");
     while (LPC_USB->HcRhPortStatus1 & OR_RH_PORT_PRS)
       ;
     LPC_USB->HcRhPortStatus1 = OR_RH_PORT_PRSC; // ...and clear port reset signal
-    DBG("After loop\n");
+    DBG("After loop\r\n");
     wait_ms(200); /* Wait for 100 MS after port reset  */
   }
   else
   {
     //TODO: Hubs
   }
-  DBG("Port reset OK\n");
+  DBG("Port reset OK\r\n");
 }
 
 #endif

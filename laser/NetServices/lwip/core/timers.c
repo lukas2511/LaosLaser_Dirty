@@ -117,7 +117,7 @@ static void
 ip_reass_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: ip_reass_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: ip_reass_tmr()\r\n"));
   ip_reass_tmr();
   sys_timeout(IP_TMR_INTERVAL, ip_reass_timer, NULL);
 }
@@ -133,7 +133,7 @@ static void
 arp_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: etharp_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: etharp_tmr()\r\n"));
   etharp_tmr();
   sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
 }
@@ -149,7 +149,7 @@ static void
 dhcp_timer_coarse(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dhcp_coarse_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dhcp_coarse_tmr()\r\n"));
   dhcp_coarse_tmr();
   sys_timeout(DHCP_COARSE_TIMER_MSECS, dhcp_timer_coarse, NULL);
 }
@@ -163,7 +163,7 @@ static void
 dhcp_timer_fine(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dhcp_fine_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dhcp_fine_tmr()\r\n"));
   dhcp_fine_tmr();
   sys_timeout(DHCP_FINE_TIMER_MSECS, dhcp_timer_fine, NULL);
 }
@@ -179,7 +179,7 @@ static void
 autoip_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: autoip_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: autoip_tmr()\r\n"));
   autoip_tmr();
   sys_timeout(AUTOIP_TMR_INTERVAL, autoip_timer, NULL);
 }
@@ -195,7 +195,7 @@ static void
 igmp_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: igmp_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: igmp_tmr()\r\n"));
   igmp_tmr();
   sys_timeout(IGMP_TMR_INTERVAL, igmp_timer, NULL);
 }
@@ -211,7 +211,7 @@ static void
 dns_timer(void *arg)
 {
   LWIP_UNUSED_ARG(arg);
-  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dns_tmr()\n"));
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: dns_tmr()\r\n"));
   dns_tmr();
   sys_timeout(DNS_TMR_INTERVAL, dns_timer, NULL);
 }
@@ -278,7 +278,7 @@ sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
   timeout->time = msecs;
 #if LWIP_DEBUG_TIMERNAMES
   timeout->handler_name = handler_name;
-  LWIP_DEBUGF(TIMERS_DEBUG, ("sys_timeout: %p msecs=%"U32_F" handler=%s arg=%p\n",
+  LWIP_DEBUGF(TIMERS_DEBUG, ("sys_timeout: %p msecs=%"U32_F" handler=%s arg=%p\r\n",
     (void *)timeout, msecs, handler_name, (void *)arg));
 #endif /* LWIP_DEBUG_TIMERNAMES */
 
@@ -381,7 +381,7 @@ sys_check_timeouts(void)
         arg = tmptimeout->arg;
 #if LWIP_DEBUG_TIMERNAMES
         if (handler != NULL) {
-          LWIP_DEBUGF(TIMERS_DEBUG, ("sct calling h=%s arg=%p\n",
+          LWIP_DEBUGF(TIMERS_DEBUG, ("sct calling h=%s arg=%p\r\n",
             tmptimeout->handler_name, arg));
         }
 #endif /* LWIP_DEBUG_TIMERNAMES */
@@ -443,7 +443,7 @@ sys_timeouts_mbox_fetch(sys_mbox_t *mbox, void **msg)
       arg = tmptimeout->arg;
 #if LWIP_DEBUG_TIMERNAMES
       if (handler != NULL) {
-        LWIP_DEBUGF(TIMERS_DEBUG, ("stmf calling h=%s arg=%p\n",
+        LWIP_DEBUGF(TIMERS_DEBUG, ("stmf calling h=%s arg=%p\r\n",
           tmptimeout->handler_name, arg));
       }
 #endif /* LWIP_DEBUG_TIMERNAMES */

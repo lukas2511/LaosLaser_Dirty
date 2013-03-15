@@ -29,7 +29,7 @@
 
 TFTPServer::TFTPServer(char* dir, int myport) {
     port = myport;
-    printf("TFTPServer(): port=%d\n", myport);
+    printf("TFTPServer(): port=%d\r\n", myport);
     ListenSock = new UDPSocket();
     ListenSock->setOnEvent(this, &TFTPServer::onListenUDPSocketEvent);
     state = listen;
@@ -100,7 +100,7 @@ void TFTPServer::ConnectRead(char* buff, Host* client) {
     dupcnt = 0;
 
     sprintf(filename, "%s", &buff[2]);
-    
+
     fp = sd.openfile(filename, "rb");
     if (fp == NULL) {
         state  = listen;
@@ -142,7 +142,7 @@ void TFTPServer::ConnectWrite(char* buff, Host* client) {
         // file ready for writing
         blockcnt = 0;
         state = writing;
-        #ifdef TFTP_DEBUG 
+        #ifdef TFTP_DEBUG
             char debugmsg[256];
             sprintf(debugmsg, "Listen: Incoming file %s on TFTP connection from %d.%d.%d.%d clientPort %d",
                 filename, clientIp[0], clientIp[1], clientIp[2], clientIp[3], clientPort);
@@ -280,7 +280,7 @@ void TFTPServer::onListenUDPSocketEvent(UDPSocketEvent e) {
                             break;
                         case 0x05: // ERROR packet received
                             #ifdef TFTP_DEBUG
-                                TFTP_DEBUG("TFTP Eror received\n\r");
+                                TFTP_DEBUG("TFTP Eror received\r\n");
                             #endif
                             break;
                         default:    // unknown TFTP packet type
@@ -379,7 +379,7 @@ void TFTPServer::onListenUDPSocketEvent(UDPSocketEvent e) {
                                         dupcnt++;
                                     }
                                 }
-                                //printf ("Read packet %d with blocksize = %d\n\r", blockcnt, len);
+                                //printf ("Read packet %d with blocksize = %d\r\n", blockcnt, len);
                                 if (len<516) {
                                     #ifdef TFTP_DEBUG
                                         char debugmsg[256];

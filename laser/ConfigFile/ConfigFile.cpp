@@ -18,30 +18,30 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with LaOS.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 #include "ConfigFile.h"
 
 // Make new config file object
-ConfigFile::ConfigFile(char *file) 
+ConfigFile::ConfigFile(char *file)
 {
-  printf("ConfigFile:ConfigFile (%s)\n\r", file);
+  printf("ConfigFile:ConfigFile (%s)\r\n", file);
   extern LaosFileSystem sd;
-  printf("ConfigFile(%s)\n\r", file);
+  printf("ConfigFile(%s)\r\n", file);
   fp =sd.openfile(file, "r");
   if (fp==NULL) {
-    printf("Local configfile\n\r");
+    printf("Local configfile\r\n");
     char tmpname[32];
     sprintf(tmpname, "/local/%s", file);
-    printf("name: %s\n\r", tmpname); 
+    printf("name: %s\r\n", tmpname);
     fp = fopen(tmpname,"r");
   }
 }
 
 // Destroy a config file (closes the file handle)
-ConfigFile::~ConfigFile() 
+ConfigFile::~ConfigFile()
 {
-   printf("~ConfigFile()\n\r");
+   printf("~ConfigFile()\r\n");
   if ( fp != NULL )
     fclose(fp);
 }
@@ -59,30 +59,30 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
 
   n = strlen(key);
   fseek(fp, 0L, SEEK_SET);
-  while( s != 99  ) 
+  while( s != 99  )
   {
     c = fgetc(fp);
-    if ( c == EOF ) 
+    if ( c == EOF )
       break;
   //  printf("%d(%d): '%c'\n\r", s, m, c);
     switch( s  )// sate machine
-    { 
+    {
       case 0: // (re) start: note: no break; fall through to case 1
-        m=0; 
+        m=0;
         s=1;
       case 1: // read key, skip spaces
-        if ( c == key[m] ) 
-          m++; 
-        else 
+        if ( c == key[m] )
+          m++;
+        else
           s = 0;
-        if ( c == ';' ) 
-          s = 10; 
-        else if ( c == ' ' || c == '\t' || c == '\n' || c == '\r') 
+        if ( c == ';' )
+          s = 10;
+        else if ( c == ' ' || c == '\t' || c == '\n' || c == '\r')
         {
           if ( n == m ) // key found
           {
             s = 2;
-            m = 0; 
+            m = 0;
           }
           else
             s = 0;
@@ -90,24 +90,24 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
         break;
       case 2: // key matched, skip whitepaces upto the first char
         if ( c == ';' ) s = 99;
-        else if ( c != ' ' && c != '\t' ) 
-        { 
+        else if ( c != ' ' && c != '\t' )
+        {
           s = 3;
           m = 1;
-          if ( m < maxlen) 
+          if ( m < maxlen)
             *value++ = c;
         }
         break;
-        
+
       case 3: // copy value content, upto eol or comment
-        if ( m == maxlen || c == '\n' || c == '\r' || c == ';' ) 
+        if ( m == maxlen || c == '\n' || c == '\r' || c == ';' )
           s = 99;
         else
         {
           m++;
           *value++ = c;
         }
-        break;         
+        break;
       case 10: // skip comments, upto eol or eof
         if ( c == '\n' || c == '\r' ) s = 0;
         break;
@@ -116,15 +116,15 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
   if ( s == 99 && m > 0) // key found, and value assigned
   {
     *value = 0; // terminate string
-    printf("'%s'='%s'\n", key,v);
-    return true; 
+    printf("'%s'='%s'\r\n", key,v);
+    return true;
   }
   else
   {
     strncpy(value, def, maxlen);
-    printf("'%s'='%s' (default)\n", key,v);
+    printf("'%s'='%s' (default)\r\n", key,v);
     return false;
-  } 
+  }
 }
 
 
@@ -136,12 +136,12 @@ bool ConfigFile::Value(char *key, int *value, int def)
   if ( b )
   {
     *value = atoi(val);
-     printf("%s: numeric value=%d\n", key, *value);
+     printf("%s: numeric value=%d\r\n", key, *value);
   }
   else
   {
     *value = def;
-     printf("%s default (%d)\n", key, *value);
+     printf("%s default (%d)\r\n", key, *value);
   }
   return b;
 }

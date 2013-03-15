@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,15 +45,15 @@ void HTTPRequestDispatcher::dispatchRequest()
   string path;
   string meth;
   HTTP_METH methCode;
-  
+
   DBG("Dispatching req\r\n");
-  
+
   if( !getRequest(&path, &meth ) )
   {
     close();
     return; //Invalid request
   }
-  
+
   if( !meth.compare("GET") )
   {
     methCode = HTTP_GET;
@@ -71,22 +71,22 @@ void HTTPRequestDispatcher::dispatchRequest()
     close(); //Parse error
     return;
   }
-  
+
   DBG("Looking for a handler\r\n");
-  
+
   map< string, HTTPRequestHandler*(*)(const char*, const char*, TCPSocket*) >::iterator it;
 //  it = m_pSvr->m_lpHandlers.find(rootPath); //We are friends so we can do that
-// NEW CODE START: 
+// NEW CODE START:
   int root_len = 0;
   for (it = m_pSvr->m_lpHandlers.begin(); it != m_pSvr->m_lpHandlers.end(); it++)
   {
-    DBG("Checking %s...\n", (*it).first.c_str());
+    DBG("Checking %s...\r\n", (*it).first.c_str());
     root_len = (*it).first.length();
     if ( root_len &&
-      !path.compare( 0, root_len, (*it).first ) && 
+      !path.compare( 0, root_len, (*it).first ) &&
       (path[root_len] == '/' || path[root_len] == '\0'))
     {
-      DBG("Found (%s)\n", (*it).first.c_str());
+      DBG("Found (%s)\r\n", (*it).first.c_str());
 	    // Found!
 	    break;	// for
 	  }
@@ -94,7 +94,7 @@ void HTTPRequestDispatcher::dispatchRequest()
 // NEW CODE END
   if((it == m_pSvr->m_lpHandlers.end()) && !(m_pSvr->m_lpHandlers.empty()))
   {
-    DBG("Using default handler\n");
+    DBG("Using default handler\r\n");
     it = m_pSvr->m_lpHandlers.end();
     it--; //Get the last element
     if( ! (((*it).first.length() == 0) || !(*it).first.compare("/")) ) //This is not the default handler
@@ -102,19 +102,19 @@ void HTTPRequestDispatcher::dispatchRequest()
     root_len = 0;
   }
   if(it == m_pSvr->m_lpHandlers.end())
-  {    
-    DBG("No handler found\n");
+  {
+    DBG("No handler found\r\n");
     close(); //No handler found
     return;
   }
-  
+
   DBG("Handler found.\r\n");
-  
+
 //HTTPRequestHandler* pHdlr = (*it).second(rootPath.c_str(), subPath.c_str(), m_pTCPSocket);
 //NEW CODE 1 LINE:
   HTTPRequestHandler* pHdlr = (*it).second((*it).first.c_str(), path.c_str() + root_len, m_pTCPSocket);
   m_pTCPSocket = NULL; //We don't own it anymore
-  
+
   switch(methCode)
   {
   case HTTP_GET:
@@ -127,7 +127,7 @@ void HTTPRequestDispatcher::dispatchRequest()
     pHdlr->doHead();
     break;
   }
-  
+
   DBG("Req handled (or being handled)\r\n");
   close();
 }
@@ -170,28 +170,28 @@ bool HTTPRequestDispatcher::getRequest(string* path, string* meth)
     {
       break;
     }
-    if( (len > 1) && *(p-1)=='\r' && *p=='\n' )
+    if( (len > 1) && *(p-1)=='\r' && *p=='\r\n' )
     {
       p--;
       len-=2;
       break;
     }
-    else if( *p=='\n' )
+    else if( *p=='\r\n' )
     {
       len--;
-      break;    
+      break;
     }
     p++;
     len++;
   }
   *p = 0;
-  
+
   DBG("Parsing request : %s\r\n", req);
-  
+
   ret = sscanf(req, "%s %s HTTP/%*d.%*d", c_meth, c_path);
   if(ret !=2)
     return false;
-    
+
   *meth = string(c_meth);
 // NEW CODE (old code removed):
    *path = string(c_path);
@@ -204,7 +204,7 @@ void HTTPRequestDispatcher::onTCPSocketEvent(TCPSocketEvent e)
 {
 
   DBG("\r\nEvent %d\r\n", e);
-  
+
   if(m_closed)
   {
     DBG("\r\nWARN: Discarded\r\n");
@@ -227,5 +227,5 @@ void HTTPRequestDispatcher::onTCPSocketEvent(TCPSocketEvent e)
     close();
     break;
   }
-  
+
 }

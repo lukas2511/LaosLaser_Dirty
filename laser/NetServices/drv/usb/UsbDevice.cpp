@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,14 +45,14 @@ UsbDevice::~UsbDevice()
 UsbErr UsbDevice::enumerate()
 {
  // USB_INT32S  rc;
- 
+
   UsbErr rc;
 
-  DBG("Starting enumeration (m_pMgr = %p)\n", m_pMgr);
-  
+  DBG("Starting enumeration (m_pMgr = %p)\r\n", m_pMgr);
+
 #if 1
   m_pMgr->resetPort(m_hub, m_port);
-#else 
+#else
   wait_ms(100);                             /* USB 2.0 spec says atleast 50ms delay beore port reset */
   LPC_USB->HcRhPortStatus1 = OR_RH_PORT_PRS; // Initiate port reset
   while (LPC_USB->HcRhPortStatus1 & OR_RH_PORT_PRS)
@@ -61,12 +61,12 @@ UsbErr UsbDevice::enumerate()
   wait_ms(200); /* Wait for 100 MS after port reset  */
 #endif
 
-  DBG("Port reset\n");
-  
+  DBG("Port reset\r\n");
+
   wait_ms(200);
-   
+
   m_pControlEp = new UsbEndpoint( this, 0x00, false, USB_CONTROL, 8, 0 );
-  
+
   //EDCtrl->Control = 8 << 16;/* Put max pkt size = 8              */
   /* Read first 8 bytes of device desc */
   rc = controlReceive(USB_DEVICE_TO_HOST | USB_RECIPIENT_DEVICE, GET_DESCRIPTOR, (USB_DESCRIPTOR_TYPE_DEVICE << 8)|(0), 0, m_controlDataBuf, 8);
@@ -75,9 +75,9 @@ UsbErr UsbDevice::enumerate()
     DBG("RC=%d",rc);
     return (rc);
   }
-  
-  DBG("Got descriptor, max ep size is %d\n", m_controlDataBuf[7]);
-  
+
+  DBG("Got descriptor, max ep size is %d\r\n", m_controlDataBuf[7]);
+
   m_pControlEp->updateSize(m_controlDataBuf[7]); /* Get max pkt size of endpoint 0    */
   rc = controlSend(USB_HOST_TO_DEVICE | USB_RECIPIENT_DEVICE, SET_ADDRESS, m_addr, 0, NULL, 0); /* Set the device address to m_addr       */
   if (rc)
@@ -87,12 +87,12 @@ UsbErr UsbDevice::enumerate()
   }
   wait_ms(2);
   //EDCtrl->Control = (EDCtrl->Control) | 1; /* Modify control pipe with address 1 */
-  
+
   //Update address
   m_pControlEp->updateAddr(m_addr);
   DBG("Ep addr is now %d", m_addr);
   /**/
-  
+
   //rc = HOST_GET_DESCRIPTOR(USB_DESCRIPTOR_TYPE_DEVICE, 0, TDBuffer, 17); //Read full device descriptor
   rc = controlReceive(USB_DEVICE_TO_HOST | USB_RECIPIENT_DEVICE, GET_DESCRIPTOR, (USB_DESCRIPTOR_TYPE_DEVICE << 8)|(0), 0, m_controlDataBuf, 17);
   if (rc)
@@ -108,11 +108,11 @@ UsbErr UsbDevice::enumerate()
   }
   */
   /**/
-  
+
   m_vid = *((uint16_t*)&m_controlDataBuf[8]);
   m_pid = *((uint16_t*)&m_controlDataBuf[10]);
-  
-  DBG("VID: %02x, PID: %02x\n", m_vid, m_pid);
+
+  DBG("VID: %02x, PID: %02x\r\n", m_vid, m_pid);
   /* Get the configuration descriptor   */
   //rc = HOST_GET_DESCRIPTOR(USB_DESCRIPTOR_TYPE_CONFIGURATION, 0, TDBuffer, 9);
   rc = controlReceive(USB_DEVICE_TO_HOST | USB_RECIPIENT_DEVICE, GET_DESCRIPTOR, (USB_DESCRIPTOR_TYPE_CONFIGURATION << 8)|(0), 0, m_controlDataBuf, 9);
@@ -129,11 +129,11 @@ UsbErr UsbDevice::enumerate()
     //PRINT_Err(rc);
     return (rc);
   }
-  
-  DBG("Desc len is %d\n", *((uint16_t*)&m_controlDataBuf[2]));
-  
-  DBG("Set configuration\n");
-  
+
+  DBG("Desc len is %d\r\n", *((uint16_t*)&m_controlDataBuf[2]));
+
+  DBG("Set configuration\r\n");
+
   //rc = USBH_SET_CONFIGURATION(1);/* Select device configuration 1     */
   rc = controlSend(USB_HOST_TO_DEVICE | USB_RECIPIENT_DEVICE, SET_CONFIGURATION, 1, 0, NULL, 0);
   if (rc)
@@ -142,7 +142,7 @@ UsbErr UsbDevice::enumerate()
    return rc;
   }
   wait_ms(100);/* Some devices may require this delay */
-  
+
   m_enumerated = true;
   return USBERR_OK;
 }
@@ -179,22 +179,22 @@ UsbErr UsbDevice::getInterfaceDescriptor(int config, int item, uint8_t** pBuf)
   byte* desc_ptr = m_controlDataBuf;
 
 /*  if (desc_ptr[1] != USB_DESCRIPTOR_TYPE_CONFIGURATION)
-  {    
+  {
     return USBERR_BADCONFIG;
   }*/
-  
+
   if(item>=m_controlDataBuf[4])//Interfaces count
     return USBERR_NOTFOUND;
-  
+
   desc_ptr += desc_ptr[0];
-  
+
   *pBuf = NULL;
-  
+
   while (desc_ptr < m_controlDataBuf + *((uint16_t*)&m_controlDataBuf[2]))
   {
 
     switch (desc_ptr[1]) {
-      case USB_DESCRIPTOR_TYPE_INTERFACE: 
+      case USB_DESCRIPTOR_TYPE_INTERFACE:
         if(desc_ptr[2] == item)
         {
           *pBuf = desc_ptr;
@@ -203,12 +203,12 @@ UsbErr UsbDevice::getInterfaceDescriptor(int config, int item, uint8_t** pBuf)
         desc_ptr += desc_ptr[0]; // Move to next descriptor start
         break;
     }
-      
+
   }
-  
+
   if(*pBuf == NULL)
     return USBERR_NOTFOUND;
-    
+
   return USBERR_OK;
 }
 

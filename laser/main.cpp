@@ -87,100 +87,100 @@ extern "C" void mbed_reset();
 /**
 *** Main function
 **/
-int main() 
+int main()
 {
   systime.start();
   //float x, y, z;
   eth_speed = 1;
-  
+
   dsp = new LaosDisplay();
-  printf( VERSION_STRING "...\nBOOT...\n" ); 
+  printf( VERSION_STRING "...\r\nBOOT...\r\n" );
   mnu = new LaosMenu(dsp);
   eth_speed=0;
 
- printf("TEST SD...\n"); 
+ printf("TEST SD...\r\n");
   FILE *fp = sd.openfile("test.txt", "wb");
   if ( fp == NULL )
   {
-    mnu->SetScreen("SD NOT READY!"); 
+    mnu->SetScreen("SD NOT READY!");
     wait(2.0);
     mbed_reset();
   }
   else
   {
-    printf("SD: READY...\n");
+    printf("SD: READY...\r\n");
     fclose(fp);
     removefile("test.txt");
   }
-  
+
   // See if there's a .bin file on the SD
   // if so, put it on the MBED and reboot
   if (SDcheckFirmware()) mbed_reset();
-  
+
   mnu->SetScreen(VERSION_STRING);
-  printf("START...\n");
+  printf("START...\r\n");
   cfg =  new GlobalConfig("config.txt");
-  mnu->SetScreen("CONFIG OK...."); 
-  printf("CONFIG OK...\n");
+  mnu->SetScreen("CONFIG OK....");
+  printf("CONFIG OK...\r\n");
   if (!cfg->nodisplay)
     dsp->testI2C();
-  
-  printf("MOTION...\n"); 
+
+  printf("MOTION...\r\n");
   mot = new LaosMotion();
-    
+
   eth = EthConfig();
   eth_speed=1;
-      
-  printf("SERVER...\n");
+
+  printf("SERVER...\r\n");
   srv = new TFTPServer("/sd", cfg->port);
-  mnu->SetScreen("SERVER OK...."); 
+  mnu->SetScreen("SERVER OK....");
   wait(0.5);
   mnu->SetScreen(9); // IP
   wait(1.0);
-  
-  printf("RUN...\n");
-  
+
+  printf("RUN...\r\n");
+
   // Wait for key, and then home
-  
+
   if ( cfg->autohome )
   {
-    printf("WAIT FOR COVER...\n");
+    printf("WAIT FOR COVER...\r\n");
     wait(1);
-  
-  
+
+
   // Start homing
     mnu->SetScreen("WAIT FOR COVER....");
-    //if ( cfg->waitforstart ) 
+    //if ( cfg->waitforstart )
       while ( !mot->isStart() );
     mnu->SetScreen("HOME....");
-    printf("HOME...\n");
+    printf("HOME...\r\n");
 
     mot->home(cfg->xhome,cfg->yhome, cfg->zhome);
     // if ( !mot->isHome ) exit(1);
-    printf("HOME DONE. (%d,%d, %d)\n",cfg->xhome,cfg->yhome,cfg->zhome);
+    printf("HOME DONE. (%d,%d, %d)\r\n",cfg->xhome,cfg->yhome,cfg->zhome);
   }
   else
-    printf("Homing skipped: %d\n", cfg->autohome);
+    printf("Homing skipped: %d\r\n", cfg->autohome);
 
   // clean sd card?
   if (cfg->cleandir) cleandir();
-  mnu->SetScreen(NULL);  
+  mnu->SetScreen(NULL);
 
   if (cfg->nodisplay) {
-    printf("No display set\n\r");
+    printf("No display set\r\n");
     main_nodisplay();
   } else {
-    printf("Entering display\n\r");
+    printf("Entering display\r\n");
     main_menu();
   }
 }
 
 void main_nodisplay() {
   float x, y, z = 0;
-  
-  // main loop  
-   while(1) 
-  {  
+
+  // main loop
+   while(1)
+  {
     led1=led2=led3=led4=0;
     mnu->SetScreen("Wait for file ...");
     while (srv->State() == listen)
@@ -188,22 +188,22 @@ void main_nodisplay() {
     GetFile();
     mot->reset();
     plan_get_current_position_xyz(&x, &y, &z);
-     printf("%f %f\n", x,y); 
-    mnu->SetScreen("Laser BUSY..."); 
-    
+     printf("%f %f\r\n", x,y);
+    mnu->SetScreen("Laser BUSY...");
+
     char name[32];
     srv->getFilename(name);
-    printf("Now processing file: '%s'\n\r", name);
+    printf("Now processing file: '%s'\r\n", name);
     FILE *in = sd.openfile(name, "r");
     while (!feof(in))
-    { 
+    {
       while (!mot->ready() );
       mot->write(readint(in));
     }
     fclose(in);
     removefile(name);
     // done
-    printf("DONE!...\n");
+    printf("DONE!...\r\n");
 	while (!mot->ready() );
     mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
   }
@@ -211,10 +211,10 @@ void main_nodisplay() {
 
 
 void main_menu() {
-  // main loop  
+  // main loop
   while (1) {
         led1=led2=led3=led4=0;
-                
+
         mnu->SetScreen(1);
         while (1) {;
             mnu->Handle();
@@ -237,7 +237,7 @@ void main_menu() {
                         }
                     }
                 }
-            }           
+            }
         }
     }
 }
@@ -248,7 +248,7 @@ void main_menu() {
 **/
 void GetFile(void) {
    Timer t;
-   printf("Main::GetFile()\n\r" );
+   printf("Main::GetFile()\r\n" );
    mnu->SetScreen("Receive file...");
    t.start();
    while (srv->State() != listen) {

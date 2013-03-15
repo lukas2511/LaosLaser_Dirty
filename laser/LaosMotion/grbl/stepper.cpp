@@ -124,14 +124,14 @@ void st_init(void)
    (cfg->yinv ? (1<<Y_STEP_BIT) : 0) |
    (cfg->zinv ? (1<<Z_STEP_BIT) : 0) |
    (cfg->einv ? (1<<E_STEP_BIT) : 0);
- 
-  printf("Direction: %d\n", direction_inv);
+
+  printf("Direction: %d\r\n", direction_inv);
   pwmofs = to_fixed(cfg->pwmmin) / 100; // offset (0 .. 1.0)
   if ( cfg->pwmmin == cfg->pwmmax )
     pwmscale = 0;
   else
     pwmscale = div_f(to_fixed(cfg->pwmmax - cfg->pwmmin), to_fixed(100) );
-  printf("ofs: %d, scale: %d\n", pwmofs, pwmscale);
+  printf("ofs: %d, scale: %d\r\n", pwmofs, pwmscale);
   actpos_x = actpos_y = actpos_z = actpos_e = 0;
   st_wake_up();
   trapezoid_tick_cycle_counter = 0;
@@ -190,7 +190,7 @@ void st_wake_up()
   {
     running = 1;
     set_step_timer(2000);
-  //  printf("wake_up()..\n");
+  //  printf("wake_up()..\r\n");
   }
 }
 
@@ -203,7 +203,7 @@ static void st_go_idle()
   clear_all_step_pins();
   *laser = LASEROFF;
   pwm = cfg->pwmmax / 100.0;  // set pwm to max;
-//  printf("idle()..\n");
+//  printf("idle()..\r\n");
 }
 
 // return number of steps to perform:  n = (v^2) / (2*a)
@@ -275,8 +275,8 @@ static inline void set_step_timer (uint32_t cycles)
    // p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
    // p = ( to_double(c_min) * current_block->power) / ( 10000.0 * (double)cycles);
   // p = (60E6/nominal_rate) / cycles; // nom_rate is steps/minute,
-   //printf("%f,%f,%f\n\r", (float)(60E6/nominal_rate), (float)cycles, (float)p);
-  // printf("%d: %f %f\n\r", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
+   //printf("%f,%f,%f\r\n", (float)(60E6/nominal_rate), (float)cycles, (float)p);
+  // printf("%d: %f %f\r\n", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
    p = (double)(cfg->pwmmin/100.0 + ((current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
    pwm = p;
 }
@@ -289,7 +289,7 @@ static  void st_interrupt (void)
 {
   // TODO: Check if the busy-flag can be eliminated by just disabeling this interrupt while we are in it
 
-  if(busy){ /*printf("busy!\n"); */ return; } // The busy-flag is used to avoid reentering this interrupt
+  if(busy){ /*printf("busy!\r\n"); */ return; } // The busy-flag is used to avoid reentering this interrupt
   busy = 1;
 
   // Set the direction pins a cuple of nanoseconds before we step the steppers
@@ -334,7 +334,19 @@ static  void st_interrupt (void)
    {
       *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
       counter_l += bitmap_width;
-     //  printf("%d %d %d: %d %d %c\n\r", bitmap_width, pos_l, counter_l,  pos_l / 32, pos_l % 32, (*laser ?  '1' : '0' ));
+     //  printf("%d %d %d: %d %d %c\r\n", bitmap_width, pos_l, counter_l,  pos_l / 32, pos_l % 32, (*laser ?  '1' : '0' ));
+      if (counter_l > 0)
+      {
+        counter_l -= current_block->step_event_count;
+     //   putchar ( (*laser ?  '1' : '0' ) );
+        pos_l++;
+      }
+   }
+   else if ( current_block->options & OPT_BITMAP_SIMULATE )
+   {
+      *laser =  LASEROFF;
+      counter_l += bitmap_width;
+     //  printf("%d %d %d: %d %d %c\r\n", bitmap_width, pos_l, counter_l,  pos_l / 32, pos_l % 32, (*laser ?  '1' : '0' ));
       if (counter_l > 0)
       {
         counter_l -= current_block->step_event_count;
@@ -452,7 +464,7 @@ static  void st_interrupt (void)
   else
   {
     // Still no block? Set the stepper pins to low before sleeping.
-    // printf("block == NULL\n");
+    // printf("block == NULL\r\n");
     step_bits = 0;
   }
 

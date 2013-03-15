@@ -49,13 +49,13 @@
  * The lwIP version of the resolver also adds a non-blocking version of
  * gethostbyname() that will work with a raw API application. This function
  * checks for an IP address string first and converts it if it is valid.
- * gethostbyname() then does a dns_lookup() to see if the name is 
- * already in the table. If so, the IP is returned. If not, a query is 
+ * gethostbyname() then does a dns_lookup() to see if the name is
+ * already in the table. If so, the IP is returned. If not, a query is
  * issued and the function returns with a ERR_INPROGRESS status. The app
  * using the dns client must then go into a waiting state.
  *
  * Once a hostname has been resolved (or found to be non-existent),
- * the resolver code calls a specified callback function (which 
+ * the resolver code calls a specified callback function (which
  * must be implemented by the module that uses the resolver).
  */
 
@@ -234,11 +234,11 @@ dns_init()
   ip_addr_t dnsserver;
 
   dns_payload = (u8_t *)LWIP_MEM_ALIGN(dns_payload_buffer);
-  
+
   /* initialize default DNS server address */
   DNS_SERVER_ADDRESS(&dnsserver);
 
-  LWIP_DEBUGF(DNS_DEBUG, ("dns_init: initializing\n"));
+  LWIP_DEBUGF(DNS_DEBUG, ("dns_init: initializing\r\n"));
 
   /* if dns client not yet initialized... */
   if (dns_pcb == NULL) {
@@ -303,7 +303,7 @@ void
 dns_tmr(void)
 {
   if (dns_pcb != NULL) {
-    LWIP_DEBUGF(DNS_DEBUG, ("dns_tmr: dns_check_entries\n"));
+    LWIP_DEBUGF(DNS_DEBUG, ("dns_tmr: dns_check_entries\r\n"));
     dns_check_entries();
   }
 }
@@ -470,7 +470,7 @@ dns_lookup(const char *name)
         (strcmp(name, dns_table[i].name) == 0)) {
       LWIP_DEBUGF(DNS_DEBUG, ("dns_lookup: \"%s\": found = ", name));
       ip_addr_debug_print(DNS_DEBUG, &(dns_table[i].ipaddr));
-      LWIP_DEBUGF(DNS_DEBUG, ("\n"));
+      LWIP_DEBUGF(DNS_DEBUG, ("\r\n"));
       return ip4_addr_get_u32(&dns_table[i].ipaddr);
     }
   }
@@ -567,7 +567,7 @@ dns_send(u8_t numdns, const char* name, u8_t id)
   const char *pHostname;
   u8_t n;
 
-  LWIP_DEBUGF(DNS_DEBUG, ("dns_send: dns_servers[%"U16_F"] \"%s\": request\n",
+  LWIP_DEBUGF(DNS_DEBUG, ("dns_send: dns_servers[%"U16_F"] \"%s\": request\r\n",
               (u16_t)(numdns), name));
   LWIP_ASSERT("dns server out of array", numdns < DNS_MAX_SERVERS);
   LWIP_ASSERT("dns server has no IP address set", !ip_addr_isany(&dns_servers[numdns]));
@@ -648,12 +648,12 @@ dns_check_entry(u8_t i)
       pEntry->numdns  = 0;
       pEntry->tmr     = 1;
       pEntry->retries = 0;
-      
+
       /* send DNS packet for this entry */
       err = dns_send(pEntry->numdns, pEntry->name, i);
       if (err != ERR_OK) {
         LWIP_DEBUGF(DNS_DEBUG | LWIP_DBG_LEVEL_WARNING,
-                    ("dns_send returned error: %d\n", err)); //FIX DG, lwip_strerr is part of lwip/api
+                    ("dns_send returned error: %d\r\n", err)); //FIX DG, lwip_strerr is part of lwip/api
       }
       break;
     }
@@ -668,7 +668,7 @@ dns_check_entry(u8_t i)
             pEntry->retries = 0;
             break;
           } else {
-            LWIP_DEBUGF(DNS_DEBUG, ("dns_check_entry: \"%s\": timeout\n", pEntry->name));
+            LWIP_DEBUGF(DNS_DEBUG, ("dns_check_entry: \"%s\": timeout\r\n", pEntry->name));
             /* call specified callback function if provided */
             if (pEntry->found)
               (*pEntry->found)(pEntry->name, NULL, pEntry->arg);
@@ -686,7 +686,7 @@ dns_check_entry(u8_t i)
         err = dns_send(pEntry->numdns, pEntry->name, i);
         if (err != ERR_OK) {
           LWIP_DEBUGF(DNS_DEBUG | LWIP_DBG_LEVEL_WARNING,
-                      ("dns_send returned error: %d\n", err)); //FIX DG, lwip_strerr is part of lwip/api
+                      ("dns_send returned error: %d\r\n", err)); //FIX DG, lwip_strerr is part of lwip/api
         }
       }
       break;
@@ -695,7 +695,7 @@ dns_check_entry(u8_t i)
     case DNS_STATE_DONE: {
       /* if the time to live is nul */
       if (--pEntry->ttl == 0) {
-        LWIP_DEBUGF(DNS_DEBUG, ("dns_check_entry: \"%s\": flush\n", pEntry->name));
+        LWIP_DEBUGF(DNS_DEBUG, ("dns_check_entry: \"%s\": flush\r\n", pEntry->name));
         /* flush this entry */
         pEntry->state = DNS_STATE_UNUSED;
         pEntry->found = NULL;
@@ -746,19 +746,19 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
 
   /* is the dns message too big ? */
   if (p->tot_len > DNS_MSG_SIZE) {
-    LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: pbuf too big\n"));
+    LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: pbuf too big\r\n"));
     /* free pbuf and return */
     goto memerr;
   }
 
   /* is the dns message big enough ? */
   if (p->tot_len < (SIZEOF_DNS_HDR + SIZEOF_DNS_QUERY + SIZEOF_DNS_ANSWER)) {
-    LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: pbuf too small\n"));
+    LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: pbuf too small\r\n"));
     /* free pbuf and return */
     goto memerr;
   }
 
-  /* copy dns payload inside static buffer for processing */ 
+  /* copy dns payload inside static buffer for processing */
   if (pbuf_copy_partial(p, dns_payload, p->tot_len, 0) == p->tot_len) {
     /* The ID in the DNS header should be our entry into the name table. */
     hdr = (struct dns_hdr*)dns_payload;
@@ -777,7 +777,7 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
 
         /* Check for error. If so, call callback to inform. */
         if (((hdr->flags1 & DNS_FLAG1_RESPONSE) == 0) || (pEntry->err != 0) || (nquestions != 1)) {
-          LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": error in flags\n", pEntry->name));
+          LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": error in flags\r\n", pEntry->name));
           /* call callback to indicate error, clean up memory and return */
           goto responseerr;
         }
@@ -785,7 +785,7 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
 #if DNS_DOES_NAME_CHECK
         /* Check if the name in the "question" part match with the name in the entry. */
         if (dns_compare_name((unsigned char *)(pEntry->name), (unsigned char *)dns_payload + SIZEOF_DNS_HDR) != 0) {
-          LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": response not match to query\n", pEntry->name));
+          LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": response not match to query\r\n", pEntry->name));
           /* call callback to indicate error, clean up memory and return */
           goto responseerr;
         }
@@ -811,7 +811,7 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
             SMEMCPY(&(pEntry->ipaddr), (pHostname+SIZEOF_DNS_ANSWER), sizeof(ip_addr_t));
             LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": response = ", pEntry->name));
             ip_addr_debug_print(DNS_DEBUG, (&(pEntry->ipaddr)));
-            LWIP_DEBUGF(DNS_DEBUG, ("\n"));
+            LWIP_DEBUGF(DNS_DEBUG, ("\r\n"));
             /* call specified callback function if provided */
             if (pEntry->found) {
               (*pEntry->found)(pEntry->name, &pEntry->ipaddr, pEntry->arg);
@@ -823,7 +823,7 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
           }
           --nanswers;
         }
-        LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": error in response\n", pEntry->name));
+        LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": error in response\r\n", pEntry->name));
         /* call callback to indicate error, clean up memory and return */
         goto responseerr;
       }
@@ -885,7 +885,7 @@ dns_enqueue(const char *name, dns_found_callback found, void *callback_arg)
   if (i == DNS_TABLE_SIZE) {
     if ((lseqi >= DNS_TABLE_SIZE) || (dns_table[lseqi].state != DNS_STATE_DONE)) {
       /* no entry can't be used now, table is full */
-      LWIP_DEBUGF(DNS_DEBUG, ("dns_enqueue: \"%s\": DNS entries table is full\n", name));
+      LWIP_DEBUGF(DNS_DEBUG, ("dns_enqueue: \"%s\": DNS entries table is full\r\n", name));
       return ERR_MEM;
     } else {
       /* use the oldest completed one */
@@ -895,7 +895,7 @@ dns_enqueue(const char *name, dns_found_callback found, void *callback_arg)
   }
 
   /* use this entry */
-  LWIP_DEBUGF(DNS_DEBUG, ("dns_enqueue: \"%s\": use DNS entry %"U16_F"\n", name, (u16_t)(i)));
+  LWIP_DEBUGF(DNS_DEBUG, ("dns_enqueue: \"%s\": use DNS entry %"U16_F"\r\n", name, (u16_t)(i)));
 
   /* fill the entry */
   pEntry->state = DNS_STATE_NEW;

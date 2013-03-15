@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -64,11 +64,11 @@ void FSHandler::doGet()
   {
     filePath += DEFAULT_PAGE;
   }
-  
-  DBG("Trying to open %s\n", filePath.c_str());
+
+  DBG("Trying to open %s\r\n", filePath.c_str());
 
   m_fp = fopen(filePath.c_str(), "r"); //FIXME: if null, error 404
-  
+
   if(!m_fp)
   {
     m_err404 = true;
@@ -81,7 +81,7 @@ void FSHandler::doGet()
     DBG("\r\nExit FSHandler::doGet() w Error 404\r\n");
     return;
   }
-    
+
   //Seek EOF to get length
   fseek(m_fp, 0, SEEK_END);
   setContentLen( ftell(m_fp) );
@@ -116,7 +116,7 @@ void FSHandler::onWriteable() //Data has been written & buf is free
     close();
     return;
   }
-  
+
   static char rBuf[CHUNK_SIZE];
   while(true)
   {
@@ -126,7 +126,7 @@ void FSHandler::onWriteable() //Data has been written & buf is free
       int writtenLen = writeData(rBuf, len);
       if(writtenLen < 0) //Socket error
       {
-        DBG("FSHandler: Socket error %d\n", writtenLen);
+        DBG("FSHandler: Socket error %d\r\n", writtenLen);
         if(writtenLen == TCPSOCKET_MEM)
         {
           fseek(m_fp, -len, SEEK_CUR);
@@ -136,7 +136,7 @@ void FSHandler::onWriteable() //Data has been written & buf is free
         {
           //This is a critical error
           close();
-          return; 
+          return;
         }
       }
       else if(writtenLen < len) //Short write, socket's buffer is full

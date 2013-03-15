@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,17 +39,17 @@ GPRSModuleNetIf::~GPRSModuleNetIf()
 {
   delete PPPNetIf::m_pIf;
 }
-  
+
 PPPErr GPRSModuleNetIf::connect(const char* apn /*= NULL*/, const char* userId /*= NULL*/, const char* password /*= NULL*/) //Connect using GPRS
 {
 
-  DBG("Powering on module.\n")
+  DBG("Powering on module.\r\n")
   if(!setOn()) //Could not power on module
   {
-    DBG("Could not power on module.\n");
+    DBG("Could not power on module.\r\n");
     return PPP_MODEM;
   }
-  
+
   //wait(10); //Wait for module to init.
 
   ATErr atErr;
@@ -58,26 +58,26 @@ PPPErr GPRSModuleNetIf::connect(const char* apn /*= NULL*/, const char* userId /
     atErr = m_pIf->open(&m_serial); //3 tries
     if(!atErr)
       break;
-    DBG("Could not open AT If, trying again.\n");
+    DBG("Could not open AT If, trying again.\r\n");
     wait(4);
   }
-    
+
   if(atErr)
   {
     setOff();
     return PPP_MODEM;
   }
-    
-  DBG("AT If opened.\n");
+
+  DBG("AT If opened.\r\n");
 
   PPPErr pppErr;
   for(int i=0; i<3; i++)
-  {  
-    DBG("Trying to connect.\n");
+  {
+    DBG("Trying to connect.\r\n");
     pppErr = PPPNetIf::GPRSConnect(apn, userId, password);
     if(!pppErr)
       break;
-    DBG("Could not connect.\n");
+    DBG("Could not connect.\r\n");
     wait(4);
   }
   if(pppErr)
@@ -85,28 +85,28 @@ PPPErr GPRSModuleNetIf::connect(const char* apn /*= NULL*/, const char* userId /
     setOff();
     return pppErr;
   }
-    
-  DBG("Connected.\n");
-  
+
+  DBG("Connected.\r\n");
+
   return PPP_OK;
 }
 
 PPPErr GPRSModuleNetIf::disconnect()
 {
-  DBG("Disconnecting...\n");
+  DBG("Disconnecting...\r\n");
   PPPErr pppErr = PPPNetIf::disconnect();
   if(pppErr)
     return pppErr;
-    
+
   m_pIf->close();
-  
-  DBG("Powering off module.\n")
+
+  DBG("Powering off module.\r\n")
   setOff(); //Power off module
-  
-  DBG("Off.\n")
-  
+
+  DBG("Off.\r\n")
+
   return PPP_OK;
 }
-  
+
 
 #endif

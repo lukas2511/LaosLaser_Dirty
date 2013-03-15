@@ -19,7 +19,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with LaOS.  If not, see <http://www.gnu.org/licenses/>.
  *
- * 
+ *
  *
  */
 #ifndef _LAOSMOTION_H_
@@ -34,17 +34,18 @@
     /** Motion Controll system
       *
       * Example:
-      * @code 
+      * @code
       * @endcode
       */
 class LaosMotion {
 public:
-    /** Make new LaosMotion object. 
+    /** Make new LaosMotion object.
       * Installs ticker
       */
   LaosMotion();
   ~LaosMotion();
   void write(int i); // write command word to motion controller
+  void simulate(int i); // simulate lasering (moving motors without actually killing stuff with lasers)
   int ready(); // returns true if we are ready to accept a new instruction
   void reset(); // reset the instruction decoder and motion controller
   void home(int xhome, int yhome, int zhome); // home the system, move to the sensors and set the specified position
@@ -56,10 +57,11 @@ public:
   void moveTo(int x, int y, int z); // move (jog) to a specific position [microns]
   void moveTo(int x, int y, int z, int speed); // move (jog) to a specific position [microns]
   int queue(); // queued items
+  void overrideSafety(bool enable);
 private:
-  
+
 };
 
- 
+
 
 #endif

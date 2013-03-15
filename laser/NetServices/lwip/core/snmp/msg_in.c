@@ -129,7 +129,7 @@ snmp_ok_response(struct snmp_msg_pstat *msg_ps)
   }
   else
   {
-    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event = %"S32_F"\n",msg_ps->error_status));
+    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event = %"S32_F"\r\n",msg_ps->error_status));
   }
   /* free varbinds (if available) */
   snmp_varbind_list_free(&msg_ps->invb);
@@ -146,7 +146,7 @@ snmp_ok_response(struct snmp_msg_pstat *msg_ps)
 static void
 snmp_msg_get_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
 {
-  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_get_event: msg_ps->state==%"U16_F"\n",(u16_t)msg_ps->state));
+  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_get_event: msg_ps->state==%"U16_F"\r\n",(u16_t)msg_ps->state));
 
   if (msg_ps->state == SNMP_MSG_EXTERNAL_GET_OBJDEF)
   {
@@ -214,7 +214,7 @@ snmp_msg_get_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
         else
         {
           en->get_value_pc(request_id, &msg_ps->ext_object_def);
-          LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: no variable space\n"));
+          LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: no variable space\r\n"));
           msg_ps->vb_ptr->ident = vb->ident;
           msg_ps->vb_ptr->ident_len = vb->ident_len;
           memp_free(MEMP_SNMP_VARBIND, vb);
@@ -235,7 +235,7 @@ snmp_msg_get_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
     else
     {
       en->get_value_pc(request_id, &msg_ps->ext_object_def);
-      LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: no outvb space\n"));
+      LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: no outvb space\r\n"));
       snmp_error_response(msg_ps,SNMP_ES_TOOBIG);
     }
   }
@@ -328,7 +328,7 @@ snmp_msg_get_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
                 }
                 else
                 {
-                  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: couldn't allocate variable space\n"));
+                  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: couldn't allocate variable space\r\n"));
                   msg_ps->vb_ptr->ident = vb->ident;
                   msg_ps->vb_ptr->ident_len = vb->ident_len;
                   memp_free(MEMP_SNMP_VARBIND, vb);
@@ -346,7 +346,7 @@ snmp_msg_get_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
             }
             else
             {
-              LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: couldn't allocate outvb space\n"));
+              LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_event: couldn't allocate outvb space\r\n"));
               snmp_error_response(msg_ps,SNMP_ES_TOOBIG);
             }
           }
@@ -379,7 +379,7 @@ snmp_msg_get_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
 static void
 snmp_msg_getnext_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
 {
-  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_getnext_event: msg_ps->state==%"U16_F"\n",(u16_t)msg_ps->state));
+  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_getnext_event: msg_ps->state==%"U16_F"\r\n",(u16_t)msg_ps->state));
 
   if (msg_ps->state == SNMP_MSG_EXTERNAL_GET_OBJDEF)
   {
@@ -424,7 +424,7 @@ snmp_msg_getnext_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
     else
     {
       en->get_value_pc(request_id, &msg_ps->ext_object_def);
-      LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_getnext_event: couldn't allocate outvb space\n"));
+      LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_getnext_event: couldn't allocate outvb space\r\n"));
       snmp_error_response(msg_ps,SNMP_ES_TOOBIG);
     }
   }
@@ -497,7 +497,7 @@ snmp_msg_getnext_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
         }
         else
         {
-          LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_recv couldn't allocate outvb space\n"));
+          LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_recv couldn't allocate outvb space\r\n"));
           snmp_error_response(msg_ps,SNMP_ES_TOOBIG);
         }
       }
@@ -524,7 +524,7 @@ snmp_msg_getnext_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
 static void
 snmp_msg_set_event(u8_t request_id, struct snmp_msg_pstat *msg_ps)
 {
-  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_set_event: msg_ps->state==%"U16_F"\n",(u16_t)msg_ps->state));
+  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_msg_set_event: msg_ps->state==%"U16_F"\r\n",(u16_t)msg_ps->state));
 
   if (msg_ps->state == SNMP_MSG_EXTERNAL_GET_OBJDEF)
   {
@@ -855,10 +855,10 @@ snmp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t
   {
     /* header check failed drop request silently, do not return error! */
     pbuf_free(p);
-    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_pdu_header_check() failed\n"));
+    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_pdu_header_check() failed\r\n"));
     return;
   }
-  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_recv ok, community %s\n", msg_ps->community));
+  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_recv ok, community %s\r\n", msg_ps->community));
 
   /* Builds a list of variable bindings. Copy the varbinds from the pbuf
     chain to glue them when these are divided over two or more pbuf's. */
@@ -870,7 +870,7 @@ snmp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t
     /* varbind-list decode failed, or varbind list empty.
        drop request silently, do not return error!
        (errors are only returned for a specific varbind failure) */
-    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_pdu_dec_varbindlist() failed\n"));
+    LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_pdu_dec_varbindlist() failed\r\n"));
     return;
   }
 
@@ -881,7 +881,7 @@ snmp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t
   /* first variable binding from list to inspect */
   msg_ps->vb_idx = 0;
 
-  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_recv varbind cnt=%"U16_F"\n",(u16_t)msg_ps->invb.count));
+  LWIP_DEBUGF(SNMP_MSG_DEBUG, ("snmp_recv varbind cnt=%"U16_F"\r\n",(u16_t)msg_ps->invb.count));
 
   /* handle input event and as much objects as possible in one go */
   snmp_msg_event(req_idx);

@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,14 +35,14 @@ THE SOFTWARE.
 #define CHUNK_SIZE 256
 
 HTTPClient::HTTPClient() : NetService(false) /*Not owned by the pool*/, m_meth(HTTP_GET), m_pCbItem(NULL), m_pCbMeth(NULL), m_pCb(NULL),
-m_watchdog(), m_timeout(0), m_pDnsReq(NULL), m_server(), m_path(), 
+m_watchdog(), m_timeout(0), m_pDnsReq(NULL), m_server(), m_path(),
 m_closed(true), m_state(HTTP_CLOSED),
 m_pDataOut(NULL), m_pDataIn(NULL), m_dataChunked(false), m_dataPos(0), m_dataLen(0), m_httpResponseCode(0), m_blockingResult(HTTP_PROCESSING)
- 
+
 {
   setTimeout(HTTP_REQUEST_TIMEOUT);
   m_buf = new char[CHUNK_SIZE];
-  DBG("New HTTPClient %p\n",this);
+  DBG("New HTTPClient %p\r\n",this);
 }
 
 HTTPClient::~HTTPClient()
@@ -50,7 +50,7 @@ HTTPClient::~HTTPClient()
   close();
   delete[] m_buf;
 }
-  
+
 void HTTPClient::basicAuth(const char* user, const char* password) //Basic Authentification
 {
   if(user==NULL)
@@ -63,8 +63,8 @@ void HTTPClient::basicAuth(const char* user, const char* password) //Basic Authe
   decStr += ":";
   decStr += password;
   auth.append( Base64::encode(decStr) );
-  DBG("Auth str is %s\n", auth.c_str());
-  m_reqHeaders["Authorization"] = auth; 
+  DBG("Auth str is %s\r\n", auth.c_str());
+  m_reqHeaders["Authorization"] = auth;
 }
 
 //High Level setup functions
@@ -82,7 +82,7 @@ HTTPResult HTTPClient::get(const char* uri, HTTPData* pDataIn, void (*pMethod)(H
 }
 
 #if 0 //For info only
-template<class T> 
+template<class T>
 HTTPResult HTTPClient::get(const char* uri, HTTPData* pDataIn, T* pItem, void (T::*pMethod)(HTTPResult)) //Non blocking
 {
   setOnResult(pItem, pMethod);
@@ -105,8 +105,8 @@ HTTPResult HTTPClient::post(const char* uri, const HTTPData& dataOut, HTTPData* 
 }
 
 #if 0 //For info only
-template<class T> 
-HTTPResult HTTPClient::post(const char* uri, const HTTPData& dataOut, HTTPData* pDataIn, T* pItem, void (T::*pMethod)(HTTPResult)) //Non blocking 
+template<class T>
+HTTPResult HTTPClient::post(const char* uri, const HTTPData& dataOut, HTTPData* pDataIn, T* pItem, void (T::*pMethod)(HTTPResult)) //Non blocking
 {
   setOnResult(pItem, pMethod);
   doPost(uri, dataOut, pDataIn);
@@ -132,9 +132,9 @@ void HTTPClient::setOnResult( void (*pMethod)(HTTPResult) )
   m_pCbItem = NULL;
   m_pCbMeth = NULL;
 }
-  
+
 #if 0 //For info only
-template<class T> 
+template<class T>
 void HTTPClient::setOnResult( T* pItem, void (T::*pMethod)(NtpResult) )
 {
   m_pCb = NULL;
@@ -142,7 +142,7 @@ void HTTPClient::setOnResult( T* pItem, void (T::*pMethod)(NtpResult) )
   m_pCbMeth = (void (CDummy::*)(NtpResult)) pMethod;
 }
 #endif
-  
+
 void HTTPClient::setTimeout(int ms)
 {
   m_timeout = ms;
@@ -162,15 +162,15 @@ void HTTPClient::poll() //Called by NetServices
   else if(m_state == HTTP_READ_DATA_INCOMPLETE)
   {
     readData(); //Try to read more data
-    if( m_state == HTTP_DONE ) 
+    if( m_state == HTTP_DONE )
     {
       //All data has been read, close w/ success :)
-      DBG("Done :)!\n");
+      DBG("Done :)!\r\n");
       onResult(HTTP_OK);
       close();
     }
   }
-  
+
 }
 
 int HTTPClient::getHTTPResponseCode()
@@ -192,7 +192,7 @@ void HTTPClient::resetRequestHeaders()
 {
   m_reqHeaders.clear();
 }
-  
+
 void HTTPClient::resetTimeout()
 {
   m_watchdog.reset();
@@ -210,7 +210,7 @@ void HTTPClient::init() //Create and setup socket if needed
   m_closed = false;
   m_httpResponseCode = 0;
 }
-  
+
 void HTTPClient::close()
 {
   if(m_closed)
@@ -239,26 +239,26 @@ void HTTPClient::setup(const char* uri, HTTPData* pDataOut, HTTPData* pDataIn) /
   m_pDataOut = pDataOut;
   m_pDataIn = pDataIn;
   resetTimeout();
-  
+
   //Erase previous headers
   //Do NOT clear m_reqHeaders as they might have already set before connecting
   m_respHeaders.clear();
-  
+
   //Erase response buffer
   if(m_pDataIn)
     m_pDataIn->clear();
-  
+
   //Assert that buffers are initialized properly
   m_dataLen = 0;
   m_bufRemainingLen = 0;
-  
+
   Url url;
   url.fromString(uri);
-  
+
   m_path = url.getPath();
-  
+
   m_server.setName(url.getHost().c_str());
-  
+
   if( url.getPort() > 0 )
   {
     m_server.setPort( url.getPort() );
@@ -267,9 +267,9 @@ void HTTPClient::setup(const char* uri, HTTPData* pDataOut, HTTPData* pDataIn) /
   {
     m_server.setPort( HTTP_PORT );
   }
-  
-  DBG("URL parsed,\r\nHost: %s\r\nPort: %d\r\nPath: %s\n", url.getHost().c_str(), url.getPort(), url.getPath().c_str());
-  
+
+  DBG("URL parsed,\r\nHost: %s\r\nPort: %d\r\nPath: %s\r\n", url.getHost().c_str(), url.getPort(), url.getPath().c_str());
+
   IpAddr ip;
   if( url.getHostIp(&ip) )
   {
@@ -278,19 +278,19 @@ void HTTPClient::setup(const char* uri, HTTPData* pDataOut, HTTPData* pDataIn) /
   }
   else
   {
-    DBG("DNS Query...\n");
+    DBG("DNS Query...\r\n");
     m_pDnsReq = new DNSRequest();
     m_pDnsReq->setOnReply(this, &HTTPClient::onDNSReply);
     m_pDnsReq->resolve(&m_server);
-    DBG("HTTPClient : DNSRequest %p\n", m_pDnsReq);
+    DBG("HTTPClient : DNSRequest %p\r\n", m_pDnsReq);
   }
-  
+
 }
 
 void HTTPClient::connect() //Start Connection
 {
   resetTimeout();
-  DBG("Connecting...\n");
+  DBG("Connecting...\r\n");
   m_pTCPSocket->connect(m_server);
 }
 
@@ -318,24 +318,24 @@ int HTTPClient::tryRead() //Try to read data from tcp packet and put in the HTTP
       {
         return readLen;
       }
-      
-      DBG("%d bytes read\n", readLen);
-      
+
+      DBG("%d bytes read\r\n", readLen);
+
       m_pBufRemaining = m_buf;
     }
     if (readLen == 0)
-    { 
+    {
       m_state = HTTP_READ_DATA;
       return len;
     }
-    
-    DBG("Trying to write %d bytes\n", readLen);
-  
+
+    DBG("Trying to write %d bytes\r\n", readLen);
+
     int writtenLen = m_pDataIn->write(m_pBufRemaining, readLen);
     m_dataPos += writtenLen;
-    
-    DBG("%d bytes written\n", writtenLen);
-     
+
+    DBG("%d bytes written\r\n", writtenLen);
+
     if(writtenLen<readLen) //Data was not completely written
     {
       m_pBufRemaining += writtenLen;
@@ -349,7 +349,7 @@ int HTTPClient::tryRead() //Try to read data from tcp packet and put in the HTTP
     }
     len += readLen;
   } while(readLen>0);
-  
+
   return len;
 }
 
@@ -360,7 +360,7 @@ void HTTPClient::readData() //Data has been read
     m_state = HTTP_DONE;
     return;
   }
-  DBG("Reading response...\n");
+  DBG("Reading response...\r\n");
   int len = 0;
   do
   {
@@ -368,7 +368,7 @@ void HTTPClient::readData() //Data has been read
     {
       if(m_dataLen==0)
       {
-        DBG("Reading chunk length...\n");
+        DBG("Reading chunk length...\r\n");
         //New block
         static char chunkHeader[16];
         //We use m_dataPos to retain the read position in chunkHeader, it has been set to 0 before the first call of readData()
@@ -378,25 +378,25 @@ void HTTPClient::readData() //Data has been read
           if( chunkHeader[strlen(chunkHeader)-1] == 0x0d )
           {
             sscanf(chunkHeader, "%x%*[^\r\n]", &m_dataLen);
-            DBG("Chunk length is %d\n", m_dataLen);
+            DBG("Chunk length is %d\r\n", m_dataLen);
             m_dataPos = 0;
           }
           else
           {
             //Wait for end of line
-            DBG("Wait for CRLF\n");
+            DBG("Wait for CRLF\r\n");
             return;
           }
         }
         else
         {
-          DBG("Wait for data\n");
+          DBG("Wait for data\r\n");
           //Wait for data
           return;
         }
       }
-    }  
-      
+    }
+
     //Proper data recovery
     len = tryRead();
     if(len<0) //Error
@@ -407,26 +407,26 @@ void HTTPClient::readData() //Data has been read
 
     if(len>0)
       resetTimeout();
-    
+
     if(m_state == HTTP_READ_DATA_INCOMPLETE)
       return;
-      
+
     //Chunk Tail
     if(m_dataChunked)
-    {  
+    {
       if(m_dataPos >= m_dataLen)
       {
-        DBG("Chunk read, wait for CRLF\n");
+        DBG("Chunk read, wait for CRLF\r\n");
         char chunkTail[3];
         m_dataPos += readLine(chunkTail, 3);
       }
-      
-      if(m_dataPos >= m_dataLen + 1) //1 == strlen("\n"),
+
+      if(m_dataPos >= m_dataLen + 1) //1 == strlen("\r\n"),
       {
-        DBG("End of chunk\n");
+        DBG("End of chunk\r\n");
         if(m_dataLen==0)
         {
-          DBG("End of file\n");
+          DBG("End of file\r\n");
           //End of file
           m_state = HTTP_DONE; //Done
         }
@@ -434,13 +434,13 @@ void HTTPClient::readData() //Data has been read
         m_dataPos = 0;
       }
     }
-  
+
   } while(len>0);
-  
-  
+
+
   if(!m_dataChunked && (m_dataPos >= m_dataLen)) //All Data has been received
   {
-    DBG("End of file\n");
+    DBG("End of file\r\n");
     m_state = HTTP_DONE; //Done
   }
 }
@@ -479,14 +479,14 @@ void HTTPClient::writeData() //Data has been written & buf is free
     m_state = HTTP_READ_HEADERS; //Wait for resp
   }
 }
-  
+
 void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
 {
-  DBG("Event %d in HTTPClient::onTCPSocketEvent()\n", e);
+  DBG("Event %d in HTTPClient::onTCPSocketEvent()\r\n", e);
 
   if(m_closed)
   {
-    DBG("WARN: Discarded\n");
+    DBG("WARN: Discarded\r\n");
     return;
   }
 
@@ -497,7 +497,7 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
     switch(m_state)
     {
     case HTTP_READ_HEADERS:
-      if( !readHeaders() ) 
+      if( !readHeaders() )
       {
         return; //Connection has been closed or incomplete data
       }
@@ -508,19 +508,19 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
         {
           m_dataChunked = true;
           m_dataPos = 0;
-          m_dataLen = 0; 
-          DBG("Encoding is chunked, Content-Type is %s\n", m_respHeaders["Content-Type"].c_str() );
+          m_dataLen = 0;
+          DBG("Encoding is chunked, Content-Type is %s\r\n", m_respHeaders["Content-Type"].c_str() );
         }
         else
-        {    
+        {
           m_dataChunked = false;
           int len = 0;
-          //DBG("Preparing read... len = %s\n", m_respHeaders["Content-Length"].c_str());
+          //DBG("Preparing read... len = %s\r\n", m_respHeaders["Content-Length"].c_str());
           sscanf(m_respHeaders["Content-Length"].c_str(), "%d", &len);
           m_pDataIn->setDataLen( len );
           m_dataPos = 0;
-          m_dataLen = len; 
-          DBG("Content-Length is %d, Content-Type is %s\n", len, m_respHeaders["Content-Type"].c_str() );
+          m_dataLen = len;
+          DBG("Content-Length is %d, Content-Type is %s\r\n", len, m_respHeaders["Content-Type"].c_str() );
         }
         m_pDataIn->setDataType( m_respHeaders["Content-Type"] );
       }
@@ -534,9 +534,9 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
       onResult(HTTP_PRTCL);
     }
  //All data has been read, close w/ success :)
-    if( m_state == HTTP_DONE ) 
+    if( m_state == HTTP_DONE )
     {
-      DBG("Done :)!\n");
+      DBG("Done :)!\r\n");
       onResult(HTTP_OK);
     }
     break;
@@ -566,7 +566,7 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
           m_dataLen = len;
           m_reqHeaders.erase("Transfer-Encoding");
           m_reqHeaders["Content-Length"] = string(c_len);
-        } 
+        }
         string type = m_pDataOut->getDataType();
         if(!type.empty())
         {
@@ -577,7 +577,7 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
           m_reqHeaders.erase("Content-Type");
         }
       }
-      if( !writeHeaders() ) 
+      if( !writeHeaders() )
       {
         return; //Connection has been closed
       }
@@ -592,7 +592,7 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
   case TCPSOCKET_CONRST:
   case TCPSOCKET_CONABRT:
   case TCPSOCKET_ERROR:
-    DBG("Connection error.\n");
+    DBG("Connection error.\r\n");
     onResult(HTTP_CONN);
   case TCPSOCKET_DISCONNECTED:
     //There might still be some data available for reading
@@ -601,7 +601,7 @@ void HTTPClient::onTCPSocketEvent(TCPSocketEvent e)
     {
       onResult(HTTP_CONN);
     }
-    DBG("Connection closed by remote host.\n");
+    DBG("Connection closed by remote host.\r\n");
     break;
   }
 }
@@ -610,18 +610,18 @@ void HTTPClient::onDNSReply(DNSReply r)
 {
   if(m_closed)
   {
-    DBG("WARN: Discarded\n");
+    DBG("WARN: Discarded\r\n");
     return;
   }
-  
+
   if( r != DNS_FOUND )
   {
-    DBG("Could not resolve hostname.\n");
+    DBG("Could not resolve hostname.\r\n");
     onResult(HTTP_DNS);
     return;
   }
-  
-  DBG("DNS Resolved to %d.%d.%d.%d.\n",m_server.getIp()[0],m_server.getIp()[1],m_server.getIp()[2],m_server.getIp()[3]);
+
+  DBG("DNS Resolved to %d.%d.%d.%d.\r\n",m_server.getIp()[0],m_server.getIp()[1],m_server.getIp()[2],m_server.getIp()[3]);
   //If no error, m_server has been updated by m_pDnsReq so we're set to go !
   m_pDnsReq->close();
   delete m_pDnsReq;
@@ -641,7 +641,7 @@ void HTTPClient::onResult(HTTPResult r) //Called when exchange completed or on f
 
 void HTTPClient::onTimeout() //Connection has timed out
 {
-  DBG("Timed out.\n");
+  DBG("Timed out.\r\n");
   onResult(HTTP_TIMEOUT);
   close();
 }
@@ -679,15 +679,15 @@ bool HTTPClient::readHeaders()
       if( sscanf(line, "HTTP/%*d.%*d %d %*[^\r\n]", &m_httpResponseCode) != 1 )
       {
         //Cannot match string, error
-        DBG("Not a correct HTTP answer : %s\n", line);
+        DBG("Not a correct HTTP answer : %s\r\n", line);
         onResult(HTTP_PRTCL);
         close();
         return false;
       }
-      
+
       if(m_httpResponseCode != 200)
       {
-        DBG("Response: error code %d\n", m_httpResponseCode);
+        DBG("Response: error code %d\r\n", m_httpResponseCode);
         HTTPResult res = HTTP_ERROR;
         switch(m_httpResponseCode)
         {
@@ -704,12 +704,12 @@ bool HTTPClient::readHeaders()
         close();
         return false;
       }
-      DBG("Response OK\n");
+      DBG("Response OK\r\n");
     }
     else
     {
       //Empty packet, weird!
-      DBG("Empty packet!\n");
+      DBG("Empty packet!\r\n");
       onResult(HTTP_PRTCL);
       close();
       return false;
@@ -722,7 +722,7 @@ bool HTTPClient::readHeaders()
     m_dataLen = 0;
     if( readLen <= 2 ) //if == 1 or 2, it is an empty line = end of headers
     {
-      DBG("All headers read.\n");
+      DBG("All headers read.\r\n");
       m_state = HTTP_READ_DATA;
       break;
     }
@@ -731,11 +731,11 @@ bool HTTPClient::readHeaders()
       m_dataLen = readLen;//Sets data length available in buffer
       return false;
     }
-    //DBG("Header : %s\n", line);
+    //DBG("Header : %s\r\n", line);
     int n = sscanf(line, "%[^:] : %[^\r\n]", key, value);
     if ( n == 2 )
     {
-      DBG("Read header : %s: %s\n", key, value);
+      DBG("Read header : %s: %s\r\n", key, value);
       m_respHeaders[key] = value;
     }
     //TODO: Impl n==1 case (part 2 of previous header)
@@ -748,13 +748,13 @@ bool HTTPClient::writeHeaders() //Called at the first writeData call
 {
   static char* line = m_buf;
   const char* HTTP_METH_STR[] = {"GET", "POST", "HEAD"};
-  
+
   //Req
   sprintf(line, "%s %s HTTP/1.1\r\nHost: %s\r\n", HTTP_METH_STR[m_meth], m_path.c_str(), m_server.getName()); //Write request
   m_pTCPSocket->send(line, strlen(line));
-  DBG("Request: %s\n", line);
-  
-  DBG("Writing headers:\n");
+  DBG("Request: %s\r\n", line);
+
+  DBG("Writing headers:\r\n");
   map<string,string>::iterator it;
   for( it = m_reqHeaders.begin(); it != m_reqHeaders.end(); it++ )
   {
@@ -782,13 +782,13 @@ int HTTPClient::readLine(char* str, int maxLen, bool* pIncomplete /* = NULL*/)
         *pIncomplete = true;
       break;
     }
-    if( (len > 1) && *(str-1)=='\r' && *str=='\n' )
+    if( (len > 1) && *(str-1)=='\r' && *str=='\r\n' )
     {
       break;
     }
-    else if( *str=='\n' )
+    else if( *str=='\r\n' )
     {
-      break;    
+      break;
     }
     str++;
     len++;

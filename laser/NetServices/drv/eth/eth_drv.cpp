@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -63,20 +63,20 @@ static err_t eth_output(struct netif *netif, struct pbuf *p) {
   #if ETH_PAD_SIZE
     pbuf_header(p, ETH_PAD_SIZE); /* reclaim the padding word */
   #endif
-  
+
   LINK_STATS_INC(link.xmit);
   return ERR_OK;
 }
 
 /*
 void show(char *buf, int size) {
-    printf("Destination:  %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
+    printf("Destination:  %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\r\n",
             buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]);
-    printf("Source: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
+    printf("Source: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\r\n",
             buf[6], buf[7], buf[8], buf[9], buf[10], buf[11]);
-  
-    printf("Type %hd\n", htons((short)buf[12]));
-    
+
+    printf("Type %hd\r\n", htons((short)buf[12]));
+
    // hexview(buf, size);
 }
 */
@@ -98,36 +98,36 @@ void eth_poll() {
          read = pEth->read((char *)p->payload, p->len);
          p = p->next;
       } while(p != NULL && read != 0);
-           
+
       #if ETH_PAD_SIZE
           pbuf_header(p, ETH_PAD_SIZE);
       #endif
 
       ethhdr = (struct eth_hdr *)(frame->payload);
-      
+
      // show((char*)ethhdr, 13);
-      
+
       /*
       switch(htons(ethhdr->type)) {
-          
+
           case ETHTYPE_IP:
               etharp_ip_input(gnetif, frame);
               pbuf_header(frame, -((s16_t) sizeof(struct eth_hdr)));
               gnetif->input(frame, gnetif);
               break;
-          
+
           case ETHTYPE_ARP:
               etharp_arp_input(gnetif, (struct eth_addr *)(gnetif->hwaddr), frame);
               break;
-          
+
           default:
               break;
       }*/
-      
-      
-      
+
+
+
       //ethernet_input(frame, gnetif);
-      
+
       switch (htons(ethhdr->type)) {
       /* IP or ARP packet? */
       case ETHTYPE_IP:
@@ -140,7 +140,7 @@ void eth_poll() {
       /* full packet send to tcpip_thread to process */
         //if (netif->input(p, gnetif)!=ERR_OK)
         if (ethernet_input(frame, eth_netif)!=ERR_OK)
-        { LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
+        { LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\r\n"));
           pbuf_free(frame);
           frame = NULL;
         }
@@ -151,23 +151,23 @@ void eth_poll() {
         frame = NULL;
         break;
       }
-      
+
       /* pbuf_free(frame); */
   }
 
-  
- 
-  
+
+
+
 }
 
 err_t eth_init(struct netif *netif) {
   LWIP_ASSERT("netif != NULL", (netif != NULL));
-  
+
   NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, 0x2EA);
-  
+
   /* maximum transfer unit */
   netif->mtu = 0x2EA;
-  
+
   /* device capabilities */
   /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
   netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP;
@@ -203,7 +203,7 @@ void eth_address(char* mac) {
 
 Ethernet* eth_interface() {
     return pEth;
-}    
+}
 
 #ifdef __cplusplus
 };

@@ -1,17 +1,17 @@
 
 /*
 Copyright (c) 2010 Donatien Garnier (donatiengar [at] gmail [dot] com)
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,7 +39,7 @@ NetService::~NetService()
 //  DBG("\r\nNow %d services running\r\n", lpServices().size()-1);
   DBG("\r\n[ - %p ] %d\r\n", (void*)this, lpServices().size()-1);
   if((!m_owned) || (!m_removed)) //Destructor was not called by servicesPoll()
-  { 
+  {
     if(m_owned)
       DBG("\r\nWARN!!!Service removed in dtor!!!\r\n");
     NetService::lpServices().remove(this);
@@ -50,7 +50,7 @@ void NetService::poll()
 {
 
 }
-  
+
 void NetService::servicesPoll() //Poll all registered services & destroy closed ones
 {
   list<NetService*>::iterator it;
@@ -66,13 +66,13 @@ void NetService::servicesPoll() //Poll all registered services & destroy closed 
     }
     else
     {
-      //DBG("Service %p polling start\n", (*it));
+      //DBG("Service %p polling start\r\n", (*it));
       (*it)->poll();
-      //DBG("Service %p polling end\n", (*it));
+      //DBG("Service %p polling end\r\n", (*it));
       it++;
     }
   }
-  
+
 }
 
 void NetService::close()
