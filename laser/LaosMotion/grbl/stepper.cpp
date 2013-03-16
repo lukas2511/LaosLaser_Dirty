@@ -330,7 +330,7 @@ static  void st_interrupt (void)
   {
 
    // this block is a bitmap engraving line, read laser on/off status from buffer
-   if ( current_block->options & OPT_BITMAP )
+   if ( current_block->options == OPT_BITMAP )
    {
       *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
       counter_l += bitmap_width;
@@ -342,7 +342,7 @@ static  void st_interrupt (void)
         pos_l++;
       }
    }
-   else if ( current_block->options & OPT_BITMAP_EMULATE )
+   else if ( current_block->options == OPT_BITMAP_EMULATE )
    {
       *laser =  LASEROFF;
       counter_l += bitmap_width;
