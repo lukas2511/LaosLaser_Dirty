@@ -57,7 +57,7 @@ DigitalOut led4(LED4);
 
 // Status and communication
 DigitalOut eth_link(p29); // green
-DigitalOut eth_speed(p30); // yellow
+//DigitalOut eth_speed(p30); // yellow
 EthernetNetIf *eth; // Ethernet, tcp/ip
 
 // Filesystems
@@ -84,19 +84,23 @@ extern void plan_get_current_position_xyz(float *x, float *y, float *z);
 extern PwmOut pwm;
 extern "C" void mbed_reset();
 
+// Safety Disabler
+DigitalOut safetydisabler(p30);
+
 /**
 *** Main function
 **/
 int main()
 {
+  safetydisabler=0;
   systime.start();
   //float x, y, z;
-  eth_speed = 1;
+//  eth_speed = 1;
 
   dsp = new LaosDisplay();
   printf( VERSION_STRING "...\r\nBOOT...\r\n" );
   mnu = new LaosMenu(dsp);
-  eth_speed=0;
+//  eth_speed=0;
 
  printf("TEST SD...\r\n");
   FILE *fp = sd.openfile("test.txt", "wb");
@@ -129,7 +133,7 @@ int main()
   mot = new LaosMotion();
 
   eth = EthConfig();
-  eth_speed=1;
+//  eth_speed=1;
 
   printf("SERVER...\r\n");
   srv = new TFTPServer("/sd", cfg->port);

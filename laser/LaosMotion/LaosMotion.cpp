@@ -48,8 +48,7 @@ DigitalOut ystep(p26);
 DigitalOut zdir(p27);
 DigitalOut zstep(p28);
 DigitalOut estep(p29); // NOK: CAN, (TODO)
-DigitalOut edir(p30);  // NOK: CAN, (TODO)
-
+// DigitalOut edir(p30);  // NOK: CAN, (TODO)
 
 // laser
 PwmOut pwm(p22);                // O1: PWM (Yellow)
