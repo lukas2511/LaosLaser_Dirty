@@ -22,39 +22,39 @@ namespace mbed {
 
 #if FFSDEBUG_ENABLED
 static const char *FR_ERRORS[] = {
-    "FR_OK = 0",
-    "FR_NOT_READY",
-    "FR_NO_FILE",
-    "FR_NO_PATH",
-    "FR_INVALID_NAME",
-    "FR_INVALID_DRIVE",
-    "FR_DENIED",
-    "FR_EXIST",
-    "FR_RW_ERROR",
-    "FR_WRITE_PROTECTED",
-    "FR_NOT_ENABLED",
-    "FR_NO_FILESYSTEM",
-    "FR_INVALID_OBJECT",
-    "FR_MKFS_ABORTED"
+    "FR_OK = 0", 
+    "FR_NOT_READY",          
+    "FR_NO_FILE",              
+    "FR_NO_PATH",             
+    "FR_INVALID_NAME",     
+    "FR_INVALID_DRIVE",      
+    "FR_DENIED",              
+    "FR_EXIST",              
+    "FR_RW_ERROR",          
+    "FR_WRITE_PROTECTED", 
+    "FR_NOT_ENABLED",    
+    "FR_NO_FILESYSTEM",    
+    "FR_INVALID_OBJECT",    
+    "FR_MKFS_ABORTED"    
 };
 #endif
 
 FATFileSystem *FATFileSystem::_ffs[_VOLUMES] = {0};
 
 FATFileSystem::FATFileSystem(const char* n) : FileSystemLike(n) {
-    FFSDEBUG("FATFileSystem(%s)\r\n", n);
+    FFSDEBUG("FATFileSystem(%s)\n", n);
     for(int i=0; i<_VOLUMES; i++) {
         if(_ffs[i] == 0) {
             _ffs[i] = this;
             _fsid = i;
-            FFSDEBUG("Mounting [%s] on ffs drive [%d]\r\n", _name, _fsid);
+            FFSDEBUG("Mounting [%s] on ffs drive [%d]\n", _name, _fsid);
             f_mount(i, &_fs);
             return;
         }
     }
-    error("Couldn't create %s in FATFileSystem::FATFileSystem\r\n",n);
+    error("Couldn't create %s in FATFileSystem::FATFileSystem\n",n);
 }
-
+    
 FATFileSystem::~FATFileSystem() {
     for(int i=0; i<_VOLUMES; i++) {
         if(_ffs[i] == this) {
@@ -63,9 +63,9 @@ FATFileSystem::~FATFileSystem() {
         }
     }
 }
-
+    
 FileHandle *FATFileSystem::open(const char* name, int flags) {
-    FFSDEBUG("open(%s) on filesystem [%s], drv [%d]\r\n", name, _name, _fsid);
+    FFSDEBUG("open(%s) on filesystem [%s], drv [%d]\n", name, _name, _fsid);
     char n[64];
     sprintf(n, "%d:/%s", _fsid, name);
 
@@ -88,8 +88,8 @@ FileHandle *FATFileSystem::open(const char* name, int flags) {
 
     FIL fh;
     FRESULT res = f_open(&fh, n, openmode);
-    if(res) {
-        FFSDEBUG("f_open('w') failed (%d, %s)\r\n", res, FR_ERRORS[res]);
+    if(res) { 
+        FFSDEBUG("f_open('w') failed (%d, %s)\n", res, FR_ERRORS[res]);
         return NULL;
     }
     if(flags & O_APPEND) {
@@ -97,21 +97,21 @@ FileHandle *FATFileSystem::open(const char* name, int flags) {
     }
     return new FATFileHandle(fh);
 }
-
+    
 int FATFileSystem::remove(const char *filename) {
     FRESULT res = f_unlink(filename);
-    if(res) {
-        FFSDEBUG("f_unlink() failed (%d, %s)\r\n", res, FR_ERRORS[res]);
+    if(res) { 
+        FFSDEBUG("f_unlink() failed (%d, %s)\n", res, FR_ERRORS[res]);
         return -1;
     }
     return 0;
 }
 
 int FATFileSystem::format() {
-    FFSDEBUG("format()\r\n");
+    FFSDEBUG("format()\n");
     FRESULT res = f_mkfs(_fsid, 0, 512); // Logical drive number, Partitioning rule, Allocation unit size (bytes per cluster)
     if(res) {
-        FFSDEBUG("f_mkfs() failed (%d, %s)\r\n", res, FR_ERRORS[res]);
+        FFSDEBUG("f_mkfs() failed (%d, %s)\n", res, FR_ERRORS[res]);
         return -1;
     }
     return 0;
