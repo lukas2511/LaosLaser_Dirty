@@ -85,14 +85,14 @@ extern PwmOut pwm;
 extern "C" void mbed_reset();
 
 // Safety Disabler
-DigitalOut safetydisabler(p30);
+DigitalOut safetyenabler(p30);
 
 /**
 *** Main function
 **/
 int main()
 {
-  safetydisabler=0;
+  safetyenabler=1;
   systime.start();
   //float x, y, z;
 //  eth_speed = 1;

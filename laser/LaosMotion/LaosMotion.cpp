@@ -672,7 +672,7 @@ void LaosMotion::setOrigin(int x, int y, int z)
 void LaosMotion::overrideSafety(bool enable)
 {
   DigitalOut overrider(p30);
-  overrider=enable;
+  overrider=!enable;
 }
 
 

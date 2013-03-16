@@ -422,6 +422,7 @@ void LaosMenu::Handle() {
                 printf("resting...\r\n");
                 mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
                 printf("resting finished...\r\n");
+                while(mot->queue()>0);
                 printf("reenable safety...\r\n");
                 mot->overrideSafety(false);
                 screen=lastscreen;
