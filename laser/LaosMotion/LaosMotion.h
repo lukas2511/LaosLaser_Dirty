@@ -45,7 +45,8 @@ public:
   LaosMotion();
   ~LaosMotion();
   void write(int i); // write command word to motion controller
-  void simulate(int i); // simulate lasering (moving motors without actually killing stuff with lasers)
+  void emulate(int i); // emulate lasering (moving motors without actually killing stuff with lasers)
+  int simulate(int i); // simulate lasering (not even moving with this stuff)
   int ready(); // returns true if we are ready to accept a new instruction
   void reset(); // reset the instruction decoder and motion controller
   void home(int xhome, int yhome, int zhome); // home the system, move to the sensors and set the specified position

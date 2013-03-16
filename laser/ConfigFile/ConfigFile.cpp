@@ -131,8 +131,8 @@ bool ConfigFile::Value(char *key, char *value,  size_t maxlen, char *def)
 // Read int value
 bool ConfigFile::Value(char *key, int *value, int def)
 {
-  char val[32];
-  bool b = Value(key, val, 31, "");
+  char val[64];
+  bool b = Value(key, val, 64, "");
   if ( b )
   {
     *value = atoi(val);

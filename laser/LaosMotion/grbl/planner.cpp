@@ -565,8 +565,8 @@ void plan_buffer_line (tActionRequest *pAction)
     block->options = OPT_LASER_ON;
   else if (  pAction->ActionType == AT_BITMAP )
     block->options = OPT_BITMAP;
-  else if (  pAction->ActionType == AT_BITMAP_SIMULATE )
-    block->options = OPT_BITMAP_SIMULATE;
+  else if (  pAction->ActionType == AT_BITMAP_EMULATE )
+    block->options = OPT_BITMAP_EMULATE;
   else
     block->options = 0;
 
@@ -633,7 +633,7 @@ void plan_buffer_action(tActionRequest *pAction)
   case AT_MOVE:
   case AT_LASER:
   case AT_BITMAP:
-  case AT_BITMAP_SIMULATE:
+  case AT_BITMAP_EMULATE:
   case AT_MOVE_ENDSTOP:
     plan_buffer_line (pAction);
     break;

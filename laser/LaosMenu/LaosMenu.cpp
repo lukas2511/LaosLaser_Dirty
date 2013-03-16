@@ -26,16 +26,17 @@ static const char *menus[] = {
     "STARTUP",     //0
     "MAIN",        //1
     "START JOB",   //2
-    "DELETE JOB",  //3
-    "HOME",        //4
-    "MOVE",        //5
-    "FOCUS",       //6
-    "ORIGIN",      //7
-    "REMOVE ALL JOBS", //8
-    "IP",          //9
-    "REBOOT", //10
-    // "POWER / SPEED",//11
-    // "IO", //12
+    "EMULATE JOB", // 3
+    "DELETE JOB",  //4
+    "HOME",        //5
+    "MOVE",        //6
+    "FOCUS",       //7
+    "ORIGIN",      //8
+    "REMOVE ALL JOBS", //9
+    "IP",          //10
+    "REBOOT", //11
+    // "POWER / SPEED",//12
+    // "IO", //13
 };
 
 static const char *screens[] = {
@@ -53,11 +54,11 @@ static const char *screens[] = {
     "RUN:            "
     "$$$$$$$$$$$$$$$$",
 
-#define SIMULATE (RUN+1)
-    "SIMULATE:       "
+#define EMULATE (RUN+1)
+    "EMULATE:        "
     "$$$$$$$$$$$$$$$$",
 
-#define DELETE (SIMULATE+1)
+#define DELETE (EMULATE+1)
     "DELETE:         "
     "$$$$$$$$$$$$$$$$",
 
@@ -106,21 +107,29 @@ static const char *screens[] = {
     "HOMING...       "
     "                ",
 
-#define RUNNING (HOMING+1)
-    "RUNNING...      "
-    "[cancel]        ",
-
-#define SIMULATING (RUNNING+1)
+#define SIMULATING (HOMING+1)
     "SIMULATING...   "
-    "[cancel]        ",
+    "                ",
 
-#define BUSY (SIMULATING+1)
+#define RUNNING (SIMULATING+1)
+    "RUNNING...      "
+    "                ",
+
+#define EMULATING (RUNNING+1)
+    "EMULATING...    "
+    "                ",
+
+#define BUSY (EMULATING+1)
     "BUSY: $$$$$$$$$$"
     "[cancel][ok]    ",
 
 #define PAUSE (BUSY+1)
     "PAUSE: $$$$$$$$$"
     "[cancel][ok]    ",
+
+#define WARN (PAUSE+1)
+    "OUT OF BORDER   "
+    "continue?       ",
 
 };
 
@@ -239,22 +248,19 @@ void LaosMenu::Handle() {
             case RUN: // START JOB select job to run
                 if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
-                    case K_OK: screen=RUNNING; break;
+                    case K_OK: screen=SIMULATING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
-                    case K_RIGHT: screen=SIMULATE; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
                 break;
 
-            case SIMULATE: // SIMULATE JOB select job to simulate
+            case EMULATE: // EMULATE JOB select job to emulate
                 if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
-                    case K_OK: screen=SIMULATING; break;
+                    case K_OK: screen=EMULATING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
-                    case K_LEFT: screen=RUN; waitup=1; break;
-                    case K_RIGHT: screen=DELETE; waitup=1; break;
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
                 }
@@ -267,7 +273,6 @@ void LaosMenu::Handle() {
                         break; // INSERT: delete current job
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
-                    case K_LEFT: screen=SIMULATE; waitup=1; break;
                     case K_CANCEL: screen=lastscreen; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
@@ -422,6 +427,48 @@ void LaosMenu::Handle() {
                 screen=lastscreen;
                 break;
 
+            case SIMULATING: // I'M SIMULATING DON'T DISTURB ME!
+                switch ( c ) {
+                    /* case K_CANCEL:
+                        while (mot->queue());
+                        mot->reset();
+                        if (runfile != NULL) fclose(runfile);
+                        runfile=NULL; screen=MAIN; menu=MAIN;
+                        break; */
+                    default:
+                        if (runfile == NULL) {
+                            runfile = sd.openfile(jobname, "rb");
+                            if (! runfile)
+                              screen=MAIN;
+                            else
+                               mot->reset();
+                        } else {
+                            while ((!feof(runfile)) && mot->ready())
+                                if(mot->simulate(readint(runfile))==1){
+                                    fclose(runfile);
+                                    screen=WARN;
+                                    break;
+                                }
+                            if (feof(runfile) && mot->ready() && screen!=WARN) {
+                                fclose(runfile);
+                                runfile = NULL;
+                                screen=RUNNING;
+                            } else {
+                                nodisplay = 1;
+                            }
+                        }
+                }
+            break;
+
+            case WARN:
+                switch( c ) {
+                    case K_OK: screen=RUNNING; waitup=1; break;
+                    case K_CANCEL: screen=MAIN; runfile=NULL; waitup=1; break;
+                    default: break;
+                }
+            break;
+
+
             case RUNNING: // Screen while running
                 switch ( c ) {
                     /* case K_CANCEL:
@@ -452,7 +499,7 @@ void LaosMenu::Handle() {
                 }
                 break;
 
-            case SIMULATING: // Screen while simulating
+            case EMULATING: // Screen while emulating
                 switch ( c ) {
                     /* case K_CANCEL:
                         while (mot->queue());
@@ -469,7 +516,7 @@ void LaosMenu::Handle() {
                                mot->reset();
                         } else {
                             while ((!feof(runfile)) && mot->ready())
-                                mot->simulate(readint(runfile));
+                                mot->emulate(readint(runfile));
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;

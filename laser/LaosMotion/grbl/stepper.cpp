@@ -342,7 +342,7 @@ static  void st_interrupt (void)
         pos_l++;
       }
    }
-   else if ( current_block->options & OPT_BITMAP_SIMULATE )
+   else if ( current_block->options & OPT_BITMAP_EMULATE )
    {
       *laser =  LASEROFF;
       counter_l += bitmap_width;

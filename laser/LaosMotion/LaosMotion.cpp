@@ -350,7 +350,7 @@ void LaosMotion::write(int i)
 *** simulate()
 *** Simulate Lasering
 **/
-void LaosMotion::simulate(int i)
+int LaosMotion::simulate(int i)
 {
   static int x=0,y=0,z=0,power=10000;
   //if (  plan_queue_empty() )
@@ -379,7 +379,148 @@ void LaosMotion::simulate(int i)
                 action.ActionType =  AT_MOVE;
                 if ( bitmap_enable)
                 {
-                  //action.ActionType = AT_BITMAP_SIMULATE; // FIXME // FIXME // FIXME //
+//                  action.ActionType = AT_BITMAP_SIMULATE;
+                  bitmap_enable = 0;
+                }
+                action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );
+                if(action.target.x>=cfg->xmax/1000.0 || action.target.y>=cfg->ymax/1000.0){
+                  printf("x: %f >= %f ?\r\n",action.target.x,cfg->xmax/1000.0);
+                  printf("y: %f >= %f ?\r\n",action.target.y,cfg->ymax/1000.0);
+                  return 1;
+                }
+                break;
+            }
+            break;
+          case 2: // move z
+            switch(step)
+            {
+              case 1:
+                step = 0;
+                z = action.target.z = i/1000.0;;
+                action.param = power;
+                action.ActionType =  AT_MOVE;
+                action.target.feed_rate =  60.0 * cfg->speed;
+                if(action.target.z>=cfg->zmax/1000.0){
+                  printf("z: %f >= %f ?\r\n",action.target.z,cfg->zmax/1000.0);
+                  return 1;
+                }
+                break;
+            }
+            break;
+         case 4: // set x,y,z (absolute)
+            switch ( step )
+            {
+              case 1:
+                x = i;
+                break;
+              case 2:
+                y = i;
+                break;
+              case 3:
+                z = i;
+                step=0;
+                break;
+            }
+            break;
+         case 5: // nop
+           step = 0;
+           break;
+         case 7: // set index,value
+            switch ( step )
+            {
+              case 1:
+                param = i;
+                break;
+              case 2:
+                val = i;
+                step = 0;
+                switch( param )
+                {
+                  case 100:
+                    if ( val < 1 ) val = 1;
+                    if ( val > 9999 ) val = 10000;
+                    mark_speed = val * cfg->speed / 10000;
+                    break;
+                  case 101:
+                    power = val;
+                    printf("power: %d\r\n", power);
+                    break;
+                }
+                break;
+            }
+            break;
+         case 9: // Store bitmap mark data format: 9 <bpp> <width> <data-0> <data-1> ... <data-n>
+            if ( step == 1 )
+            {
+              bitmap_bpp = i;
+            }
+            else if ( step == 2 )
+            {
+           //   if ( queue() ) printf("Queue not empty... wait...\r\n");
+              while ( queue() );// printf("+"); // wait for queue to empty
+              bitmap_width = i;
+              bitmap_enable = 1;
+              bitmap_size = (bitmap_bpp * bitmap_width) / 32;
+              if  ( (bitmap_bpp * bitmap_width) % 32 )  // padd to next 32-bit
+                bitmap_size++;
+              // printf("\r\nBitmap: read %d dwords\r\n", bitmap_size);
+
+            }
+            else if ( step > 2 )// copy data
+            {
+              bitmap[ (step-3) % BITMAP_SIZE ] = i;
+        // printf("[%ld] = %ld\r\n", (step-3) % BITMAP_SIZE, i);
+        if ( step-2 == bitmap_size ) // last dword received
+              {
+                step = 0;
+                // printf("Bitmap: received %d dwords\r\n", bitmap_size);
+              }
+            }
+            break;
+         default: // I do not understand: stop motion
+            step = 0;
+            break;
+    }
+    if ( step )
+    step++;
+  }
+  return 0;
+}
+
+/**
+*** emulate()
+*** Emulate Lasering
+**/
+void LaosMotion::emulate(int i)
+{
+  static int x=0,y=0,z=0,power=10000;
+  //if (  plan_queue_empty() )
+  //printf("Empty\r\n");
+  if ( step == 0 )
+  {
+    command = i;
+    step++;
+  }
+  else
+  {
+     switch( command )
+     {
+          case 0: // move x,y (laser off)
+          case 1: // line x,y (laser on)
+            switch ( step )
+            {
+              case 1:
+                action.target.x = i/1000.0;
+                break;
+              case 2:
+                action.target.y = i/1000.0;;
+                step=0;
+                action.target.z = 0;
+                action.param = power;
+                action.ActionType =  AT_MOVE;
+                if ( bitmap_enable)
+                {
+                  action.ActionType = AT_BITMAP_EMULATE;
                   bitmap_enable = 0;
                 }
                 action.target.feed_rate =  60.0 * (command ? mark_speed : cfg->speed );

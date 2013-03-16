@@ -29,12 +29,12 @@ extern "C" void mbed_reset();
     /** LaosDisplay
       * Connect to LCD terminal or PC
       * Example:
-      * @code 
+      * @code
       * @endcode
       */
 class LaosDisplay {
 public:
-    /** Make new LaosDisplay object. 
+    /** Make new LaosDisplay object.
       */
     LaosDisplay();
     void Simulate();
@@ -43,21 +43,21 @@ public:
   * @param x  x position in characters (zero based)
   * @param y  y position in characters (zero based)
   * @param s The string to display
-  */ 
+  */
   void write(char *s);
   void ShowScreen(const char *l, int *arg, char *s);
   void testI2C();
-   
+
 
 /** Clear screen
-  */ 
+  */
    void cls();
 
 /** Read key value. (non blocking)
   * @return (ASCII) character value, zero if no character is available
-  */ 
+  */
   int read();
-    
+
 private:
   bool sim;
   int i2cBaud;
