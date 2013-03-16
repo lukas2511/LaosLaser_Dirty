@@ -291,7 +291,7 @@ void LaosMenu::Handle() {
                     case K_FDOWN: screen=FOCUS; break;
                     case K_ORIGIN: screen=ORIGIN; break;
                 }
-                if  ((mot->queue() < 5) && ( (x!=xt) || (y != yt) )) {
+                if  ((mot->queue() < 1) && ( (x!=xt) || (y != yt) )) {
                     mot->moveTo(x, y, z, speed/2);
 					printf("Move: %d %d %d %d\r\n", x,y,z, speed);
                 } else {
