@@ -430,12 +430,6 @@ void LaosMenu::Handle() {
 
             case SIMULATING: // I'M SIMULATING DON'T DISTURB ME!
                 switch ( c ) {
-                    /* case K_CANCEL:
-                        while (mot->queue());
-                        mot->reset();
-                        if (runfile != NULL) fclose(runfile);
-                        runfile=NULL; screen=MAIN; menu=MAIN;
-                        break; */
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
@@ -444,13 +438,23 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            while ((!feof(runfile)) && mot->ready())
+                            int canceled=0;
+                            while ((!feof(runfile)) && mot->ready()){
+                                c = dsp->read();
+                                if(c==K_CANCEL){
+                                    fclose(runfile);
+                                    runfile = NULL;
+                                    screen = MAIN;
+                                    canceled=1;
+                                    break;
+                                }
                                 if(mot->write(readint(runfile),MODE_SIMULATE)==1){
                                     fclose(runfile);
                                     screen=WARN;
                                     break;
                                 }
-                            if (feof(runfile) && mot->ready() && screen!=WARN) {
+                            }
+                            if (!canceled && feof(runfile) && mot->ready() && screen!=WARN) {
                                 fclose(runfile);
                                 runfile = NULL;
                                 screen=RUNNING;
@@ -472,12 +476,6 @@ void LaosMenu::Handle() {
 
             case RUNNING: // Screen while running
                 switch ( c ) {
-                    /* case K_CANCEL:
-                        while (mot->queue());
-                        mot->reset();
-                        if (runfile != NULL) fclose(runfile);
-                        runfile=NULL; screen=MAIN; menu=MAIN;
-                        break; */
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
