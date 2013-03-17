@@ -58,6 +58,7 @@ public:
   * Reads inputs, displays screen
   */
   void Handle();
+  void doHoming(int force);
   void SetScreen(int screen);
   void SetScreen(char *s);
   void SetFileName(char * name);

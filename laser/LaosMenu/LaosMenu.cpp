@@ -202,10 +202,37 @@ void LaosMenu::checkCancel() {
         canceled=1;
         mot->clearBuffer();
         mot->reset();
+        mot->isHome=false;
         printf("cancel pressed!\r\n");
     }
 }
 
+void LaosMenu::doHoming(int force){
+    if(!force && mot->isHome) return;
+    lastscreen = screen;
+    screen = HOMING;
+    dsp->ShowScreen(screens[screen], NULL, NULL);
+    screen = lastscreen;
+    x = cfg->xhome;
+    y = cfg->yhome;
+    z = cfg->zhome;
+    while ( !mot->isStart() );
+    printf("disable safety...\r\n");
+    mot->overrideSafety(true);
+    mot->home(cfg->xhome,cfg->yhome,cfg->zhome);
+    mot->getPosition(&x, &y, &z);
+    while(!mot->ready());
+    if(mot->isHome){
+        printf("resting...\r\n");
+        mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+        printf("resting finished...\r\n");
+    }
+    while(mot->queue()>0);
+    printf("reenable safety...\r\n");
+    mot->overrideSafety(false);
+    screen = lastscreen;
+    dsp->ShowScreen(screens[screen], args, sarg);
+}
 /**
 *** Handle menu system
 *** Read keys, and plan next action on the screen, output screen if
@@ -423,22 +450,8 @@ void LaosMenu::Handle() {
                 break;
 */
             case HOMING: // Homing screen
-                x = cfg->xhome;
-                y = cfg->yhome;
-                z = cfg->zhome;
-                while ( !mot->isStart() );
-                printf("disable safety...\r\n");
-                mot->overrideSafety(true);
-                mot->home(cfg->xhome,cfg->yhome,cfg->zhome);
-                mot->getPosition(&x, &y, &z);
-                while(!mot->ready());
-                printf("resting...\r\n");
-                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
-                printf("resting finished...\r\n");
-                while(mot->queue()>0);
-                printf("reenable safety...\r\n");
-                mot->overrideSafety(false);
-                screen=lastscreen;
+                doHoming(1);
+                screen=MAIN;
                 break;
 
             case SIMULATING: // I'M SIMULATING DON'T DISTURB ME!
@@ -486,29 +499,35 @@ void LaosMenu::Handle() {
             case RUNNING: // Screen while running
                 switch ( c ) {
                     default:
-                        if (runfile == NULL) {
-                            runfile = sd.openfile(jobname, "rb");
-                            if (! runfile)
-                              screen=MAIN;
-                            else
-                               mot->reset();
+                        doHoming(0);
+                        if(mot->isHome){
+                            if (runfile == NULL) {
+                                runfile = sd.openfile(jobname, "rb");
+                                if (! runfile){
+                                    screen=MAIN;
+                                } else {
+                                    mot->reset();
+                                }
+                             } else {
+                                canceled=0;
+                                while (!canceled && ((!feof(runfile)) && mot->ready())){
+                                    checkCancel();
+                                    mot->write(readint(runfile),MODE_RUN);
+                                }
+                                while(!canceled && mot->queue()>0){
+                                    checkCancel();
+                                }
+                                if (!canceled && feof(runfile) && mot->ready()) {
+                                    fclose(runfile);
+                                    runfile = NULL;
+                                    mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+                                    screen=MAIN;
+                                } else {
+                                    nodisplay = 1;
+                                }
+                            }
                         } else {
-                            canceled=0;
-                            while (!canceled && ((!feof(runfile)) && mot->ready())){
-                                checkCancel();
-                                mot->write(readint(runfile),MODE_RUN);
-                            }
-                            while(!canceled && mot->queue()>0){
-                                checkCancel();
-                            }
-                            if (!canceled && feof(runfile) && mot->ready()) {
-                                fclose(runfile);
-                                runfile = NULL;
-                                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
-                                screen=MAIN;
-                            } else {
-                                nodisplay = 1;
-                            }
+                            screen=MAIN;
                         }
                 }
                 break;
@@ -516,29 +535,35 @@ void LaosMenu::Handle() {
             case TESTING: // Screen while testing
                 switch ( c ) {
                     default:
-                        if (runfile == NULL) {
-                            runfile = sd.openfile(jobname, "rb");
-                            if (! runfile)
-                              screen=MAIN;
-                            else
-                               mot->reset();
+                        doHoming(0);
+                        if(mot->isHome){
+                            if (runfile == NULL) {
+                                runfile = sd.openfile(jobname, "rb");
+                                if (! runfile){
+                                    screen=MAIN;
+                                } else {
+                                    mot->reset();
+                                }
+                             } else {
+                                canceled=0;
+                                while (!canceled && ((!feof(runfile)) && mot->ready())){
+                                    checkCancel();
+                                    mot->write(readint(runfile),MODE_TEST);
+                                }
+                                while(!canceled && mot->queue()>0){
+                                    checkCancel();
+                                }
+                                if (!canceled && feof(runfile) && mot->ready()) {
+                                    fclose(runfile);
+                                    runfile = NULL;
+                                    mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+                                    screen=MAIN;
+                                } else {
+                                    nodisplay = 1;
+                                }
+                            }
                         } else {
-                            canceled=0;
-                            while (!canceled && ((!feof(runfile)) && mot->ready())){
-                                checkCancel();
-                                mot->write(readint(runfile),MODE_TEST);
-                            }
-                            while(!canceled && mot->queue()>0){
-                                checkCancel();
-                            }
-                            if (!canceled && feof(runfile) && mot->ready()) {
-                                fclose(runfile);
-                                runfile = NULL;
-                                mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
-                                screen=MAIN;
-                            } else {
-                                nodisplay = 1;
-                            }
+                            screen=MAIN;
                         }
                 }
                 break;

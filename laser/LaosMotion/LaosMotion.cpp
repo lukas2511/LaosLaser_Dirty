@@ -422,7 +422,12 @@ void LaosMotion::overrideSafety(bool enable)
 **/
 void LaosMotion::home(int x, int y, int z)
 {
+  LaosDisplay *dsp;
   int i=0;
+  int canceled = 0;
+  int c = 0;
+  int counter = 0;
+  int countupto = (cfg->xscale/1000)*5; // do things every 5mm (maybe)
   printf("Homing %d,%d, %d with speed %d\r\n", x, y, z, cfg->homespeed);
   xdir = cfg->xhomedir;
   ydir = cfg->yhomedir;
@@ -431,16 +436,37 @@ void LaosMotion::home(int x, int y, int z)
   isHome = false;
   printf("Home Z...\r\n");
   if (cfg->autozhome) {
-    while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol)) {
-        zstep = 0;
+    while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol) && !canceled) {
+      if(counter==countupto){
+        c = dsp->read();
+        if(c==K_CANCEL){
+          isHome = false;
+          return;
+        }
+        counter=0;
+      }else{
+        counter++;
+      }
+      zstep = 0;
         wait(cfg->homespeed/1E6);
         zstep = 1;
         wait(cfg->homespeed/1E6);
     }
   }
+  counter=0;
   printf("Home XY...\r\n");
-  while ( 1 )
+  while ( 1 && !canceled )
   {
+    if(counter==countupto){
+      c = dsp->read();
+      if(c==K_CANCEL){
+        isHome = false;
+        return;
+      }
+      counter=0;
+    }else{
+      counter++;
+    }
     xstep = ystep = 0;
     wait(cfg->homespeed/1E6);
     xstep = xhome ^ cfg->xpol;
