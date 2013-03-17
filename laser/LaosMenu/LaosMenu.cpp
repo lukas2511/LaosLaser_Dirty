@@ -445,15 +445,13 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            int canceled=0;
                             while ((!feof(runfile)) && mot->ready())
                                 if(mot->write(readint(runfile),MODE_SIMULATE)==1){
                                     fclose(runfile);
                                     screen=WARN;
-                                    canceled=1;
                                     break;
                                 }
-                            if (!canceled && feof(runfile) && mot->ready() && screen!=WARN) {
+                            if (feof(runfile) && mot->ready() && screen!=WARN) {
                                 fclose(runfile);
                                 runfile = NULL;
                                 screen=RUNNING;
@@ -489,6 +487,7 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
+                            int canceled=0;
                             while ((!feof(runfile)) && mot->ready()){
                                 c = dsp->read();
                                 if(c==K_CANCEL){
@@ -496,11 +495,12 @@ void LaosMenu::Handle() {
                                     fclose(runfile);
                                     runfile = NULL;
                                     screen = MAIN;
+                                    canceled=1;
                                     break;
                                 }
                                 mot->write(readint(runfile),MODE_RUN);
                             }
-                            if (feof(runfile) && mot->ready()) {
+                            if (!canceled && feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
                                 mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
@@ -514,12 +514,6 @@ void LaosMenu::Handle() {
 
             case TESTING: // Screen while testing
                 switch ( c ) {
-                    /* case K_CANCEL:
-                        while (mot->queue());
-                        mot->reset();
-                        if (runfile != NULL) fclose(runfile);
-                        runfile=NULL; screen=MAIN; menu=MAIN;
-                        break; */
                     default:
                         if (runfile == NULL) {
                             runfile = sd.openfile(jobname, "rb");
@@ -528,9 +522,20 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            while ((!feof(runfile)) && mot->ready())
+                            int canceled=0;
+                            while ((!feof(runfile)) && mot->ready()){
+                                c = dsp->read();
+                                if(c==K_CANCEL){
+                                    laser_on(LASEROFF);
+                                    fclose(runfile);
+                                    runfile = NULL;
+                                    screen = MAIN;
+                                    canceled=1;
+                                    break;
+                                }
                                 mot->write(readint(runfile),MODE_TEST);
-                            if (feof(runfile) && mot->ready()) {
+                            }
+                            if (!canceled && feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
                                 mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
