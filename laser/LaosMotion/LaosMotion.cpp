@@ -427,7 +427,7 @@ void LaosMotion::home(int x, int y, int z)
   int canceled = 0;
   int c = 0;
   int counter = 0;
-  int countupto = (cfg->xscale/1000)*5; // do things every 5mm (maybe)
+  int countupto = (cfg->xscale/1000)*5; // check cancel button state every 5mm (maybe)
   printf("Homing %d,%d, %d with speed %d\r\n", x, y, z, cfg->homespeed);
   xdir = cfg->xhomedir;
   ydir = cfg->yhomedir;
