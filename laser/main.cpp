@@ -106,7 +106,7 @@ int main()
   FILE *fp = sd.openfile("test.txt", "wb");
   if ( fp == NULL )
   {
-    mnu->SetScreen("SD NOT READY!");
+    mnu->SetScreen("WAITING FOR SD..PLEASE WAIT");
     wait(2.0);
     mbed_reset();
   }
