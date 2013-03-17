@@ -492,6 +492,7 @@ void LaosMenu::Handle() {
                                 c = dsp->read();
                                 if(c==K_CANCEL){
                                     laser_on(LASEROFF);
+                                    mot->reset();
                                     fclose(runfile);
                                     runfile = NULL;
                                     screen = MAIN;
@@ -527,6 +528,7 @@ void LaosMenu::Handle() {
                                 c = dsp->read();
                                 if(c==K_CANCEL){
                                     laser_on(LASEROFF);
+                                    mot->reset();
                                     fclose(runfile);
                                     runfile = NULL;
                                     screen = MAIN;
