@@ -107,6 +107,10 @@ void st_synchronize();
 // Execute the homing cycle
 void st_go_home();
 
+// Execute to kill everything that moves
+void st_go_idle();
+void clear_current_block();
+
 // The stepper subsystem goes to sleep when it runs out of things to execute. Call this
 // to notify the subsystem that it is time to go to work.
 void st_wake_up();

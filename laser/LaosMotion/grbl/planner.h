@@ -107,6 +107,8 @@ void plan_buffer_line (tActionRequest *pAction);
 
 void plan_buffer_action(tActionRequest *pAction);
 
+void plan_clear_buffer();
+
 // Called when the current block is no longer needed. Discards the block and makes the memory
 // availible for new blocks.
 void plan_discard_current_block();

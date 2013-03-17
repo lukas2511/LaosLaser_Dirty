@@ -57,6 +57,7 @@ public:
   void moveTo(int x, int y, int z, int speed); // move (jog) to a specific position [microns]
   int queue(); // queued items
   void overrideSafety(bool enable);
+  void clearBuffer();
 private:
 
 };

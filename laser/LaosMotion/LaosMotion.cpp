@@ -153,8 +153,8 @@ void LaosMotion::reset()
 {
   step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
   ofsx = ofsy = ofsz = 0;
-  laser_on(LASEROFF);
   enable = cfg->enable;
+  laser_on(LASEROFF);
   cover.mode(PullUp);
 }
 
@@ -180,6 +180,11 @@ int LaosMotion::queue()
 }
 
 
+void LaosMotion::clearBuffer()
+{
+  plan_clear_buffer();
+  clear_current_block();
+}
 
 
 /**

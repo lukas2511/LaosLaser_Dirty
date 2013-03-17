@@ -52,7 +52,6 @@ typedef enum {RAMP_UP, RAMP_MAX, RAMP_DOWN} tRamp;
 // Prototypes
 static void st_interrupt ();
 static void set_step_timer (uint32_t cycles);
-static void st_go_idle();
 
 // Globals
 volatile unsigned char busy = 0;
@@ -197,13 +196,12 @@ void st_wake_up()
 
 // When not stepping, go to idle mode. Steppers can be switched off, or set to reduced current
 // (some delay might have to be implemented). Currently no motor switchoff is done.
-static void st_go_idle()
+void st_go_idle()
 {
   timer.detach();
   running = 0;
   clear_all_step_pins();
   laser_on(LASEROFF);
-  pwm = cfg->pwmmin / 100.0;  // set pwm to max;
 //  printf("idle()..\r\n");
 }
 
@@ -278,6 +276,10 @@ static inline void set_step_timer (uint32_t cycles)
    //printf("%f,%f,%f\r\n", (float)(60E6/nominal_rate), (float)cycles, (float)p);
   // printf("%d: %f %f\r\n", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
    p = (double)(cfg->pwmmin/100.0 + ((current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
+}
+
+void clear_current_block(){
+  current_block = NULL;
 }
 
 void laser_on(int state)

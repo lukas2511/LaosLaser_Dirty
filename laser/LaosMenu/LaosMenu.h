@@ -20,7 +20,7 @@
  *   along with LaOS.  If not, see <http://www.gnu.org/licenses/>.
  *
  *
- @code 
+ @code
  --code--
  @endcode
  */
@@ -33,32 +33,36 @@
 extern "C" void mbed_reset();
 
     /** Menu system
-      * Create server based on config file. 
+      * Create server based on config file.
       *
       * Example:
-      * @code 
+      * @code
       * LaosMenu menu();
       * menu.Handle();
       * @endcode
       */
-      
+
 extern void plan_get_current_position_xyz(float *x, float *y, float *z);
 
+extern LaosMotion *mot;
+
 class LaosMenu {
+
 public:
-    /** Make new LaosMenu object. 
+    /** Make new LaosMenu object.
       */
   LaosMenu(LaosDisplay *display);
   ~LaosMenu();
 
 /** Handle the menu system
   * Reads inputs, displays screen
-  */ 
+  */
   void Handle();
   void SetScreen(int screen);
   void SetScreen(char *s);
   void SetFileName(char * name);
-  
+  void checkCancel();
+
 private:
   // LaosDisplay *display;
   int args[5];
@@ -66,7 +70,12 @@ private:
   char *sarg;
   int speed;
   char jobname[MAXFILESIZE];
-  
+
+  // input character
+  int c;
+
+  int canceled=0;
+
   // menu states
   int screen, prevscreen, lastscreen;
   unsigned char menu, ipfield, iofield;
@@ -75,9 +84,9 @@ private:
   int x,y,z;
   int xoff, yoff, zoff;
   FILE *runfile;
-  
+
 };
 
- 
+
 
 #endif

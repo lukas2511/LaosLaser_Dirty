@@ -39,6 +39,7 @@ static const char *menus[] = {
     // "IO", //13
 };
 
+
 static const char *screens[] = {
     //0: main, navigate to  MOVE, FOCUS, HOME, ORIGIN, START JOB, IP,
     // DELETE JOB, POWER
@@ -192,6 +193,19 @@ void LaosMenu::SetScreen(char *msg) {
     Handle();
 }
 
+void LaosMenu::checkCancel() {
+    c = dsp->read();
+    if(c==K_CANCEL){
+        fclose(runfile);
+        runfile = NULL;
+        screen = MAIN;
+        canceled=1;
+        mot->clearBuffer();
+        mot->reset();
+        printf("cancel pressed!\r\n");
+    }
+}
+
 /**
 *** Handle menu system
 *** Read keys, and plan next action on the screen, output screen if
@@ -200,10 +214,9 @@ void LaosMenu::SetScreen(char *msg) {
 void LaosMenu::Handle() {
     int xt, yt, zt, cnt=0, nodisplay = 0;
     extern LaosFileSystem sd;
-    extern LaosMotion *mot;
     static int count=0;
 
-    int c = dsp->read();
+    c = dsp->read();
     if ( count++ > 10) count = 0; // screen refresh counter (refresh once every 10 cycles(
 
     if ( c ) timeout = 10;  // keypress timeout counter
@@ -438,21 +451,17 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            int canceled=0;
-                            while ((!feof(runfile)) && mot->ready()){
-                                c = dsp->read();
-                                if(c==K_CANCEL){
-                                    fclose(runfile);
-                                    runfile = NULL;
-                                    screen = MAIN;
-                                    canceled=1;
-                                    break;
-                                }
+                            canceled=0;
+                            while (!canceled && ((!feof(runfile)) && mot->ready())){
+                                checkCancel();
                                 if(mot->write(readint(runfile),MODE_SIMULATE)==1){
                                     fclose(runfile);
                                     screen=WARN;
                                     break;
                                 }
+                            }
+                            while(!canceled && mot->queue()>0){
+                                checkCancel();
                             }
                             if (!canceled && feof(runfile) && mot->ready() && screen!=WARN) {
                                 fclose(runfile);
@@ -484,18 +493,13 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            int canceled=0;
-                            while ((!feof(runfile)) && mot->ready()){
-                                c = dsp->read();
-                                if(c==K_CANCEL){
-                                    mot->reset();
-                                    fclose(runfile);
-                                    runfile = NULL;
-                                    screen = MAIN;
-                                    canceled=1;
-                                    break;
-                                }
+                            canceled=0;
+                            while (!canceled && ((!feof(runfile)) && mot->ready())){
+                                checkCancel();
                                 mot->write(readint(runfile),MODE_RUN);
+                            }
+                            while(!canceled && mot->queue()>0){
+                                checkCancel();
                             }
                             if (!canceled && feof(runfile) && mot->ready()) {
                                 fclose(runfile);
@@ -519,18 +523,13 @@ void LaosMenu::Handle() {
                             else
                                mot->reset();
                         } else {
-                            int canceled=0;
-                            while ((!feof(runfile)) && mot->ready()){
-                                c = dsp->read();
-                                if(c==K_CANCEL){
-                                    mot->reset();
-                                    fclose(runfile);
-                                    runfile = NULL;
-                                    screen = MAIN;
-                                    canceled=1;
-                                    break;
-                                }
+                            canceled=0;
+                            while (!canceled && ((!feof(runfile)) && mot->ready())){
+                                checkCancel();
                                 mot->write(readint(runfile),MODE_TEST);
+                            }
+                            while(!canceled && mot->queue()>0){
+                                checkCancel();
                             }
                             if (!canceled && feof(runfile) && mot->ready()) {
                                 fclose(runfile);
