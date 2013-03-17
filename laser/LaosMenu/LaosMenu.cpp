@@ -21,7 +21,6 @@
  *
  */
 #include "LaosMenu.h"
-#include "LaosMotion/grbl/stepper.h"
 
 static const char *menus[] = {
     "STARTUP",     //0
@@ -491,7 +490,6 @@ void LaosMenu::Handle() {
                             while ((!feof(runfile)) && mot->ready()){
                                 c = dsp->read();
                                 if(c==K_CANCEL){
-                                    laser_on(LASEROFF);
                                     mot->reset();
                                     fclose(runfile);
                                     runfile = NULL;
@@ -527,7 +525,6 @@ void LaosMenu::Handle() {
                             while ((!feof(runfile)) && mot->ready()){
                                 c = dsp->read();
                                 if(c==K_CANCEL){
-                                    laser_on(LASEROFF);
                                     mot->reset();
                                     fclose(runfile);
                                     runfile = NULL;
