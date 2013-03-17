@@ -95,7 +95,7 @@ LaosMotion::LaosMotion()
   pwm.period(1.0 / cfg->pwmfreq);
   pwm = cfg->pwmmin/100.0;
   if ( laser == NULL ) laser = new DigitalOut(LASER_PIN);
-  *laser = LASEROFF;
+  laser_on(LASEROFF);
 
   mark_speed = cfg->speed;
   //start.mode(PullUp);
@@ -153,7 +153,7 @@ void LaosMotion::reset()
 {
   step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
   ofsx = ofsy = ofsz = 0;
-  *laser = LASEROFF;
+  laser_on(LASEROFF);
   enable = cfg->enable;
   cover.mode(PullUp);
 }

@@ -56,6 +56,7 @@ static void st_go_idle();
 
 // Globals
 volatile unsigned char busy = 0;
+volatile static double p = cfg->pwmmin/100.0;
 volatile int32_t actpos_x, actpos_y, actpos_z, actpos_e; // actual position
 
 // Locals
@@ -201,8 +202,8 @@ static void st_go_idle()
   timer.detach();
   running = 0;
   clear_all_step_pins();
-  *laser = LASEROFF;
-  pwm = cfg->pwmmax / 100.0;  // set pwm to max;
+  laser_on(LASEROFF);
+  pwm = cfg->pwmmin / 100.0;  // set pwm to max;
 //  printf("idle()..\r\n");
 }
 
@@ -270,7 +271,6 @@ static inline void trapezoid_generator_reset()
 // Set the step timer. Note: this starts the ticker at an interval of "cycles"
 static inline void set_step_timer (uint32_t cycles)
 {
-   volatile static double p;
    timer.attach_us(&st_interrupt,cycles);
    // p = to_double(pwmofs + mul_f( pwmscale, ((power>>6) * c_min) / ((10000>>6)*cycles) ) );
    // p = ( to_double(c_min) * current_block->power) / ( 10000.0 * (double)cycles);
@@ -278,7 +278,17 @@ static inline void set_step_timer (uint32_t cycles)
    //printf("%f,%f,%f\r\n", (float)(60E6/nominal_rate), (float)cycles, (float)p);
   // printf("%d: %f %f\r\n", (int)current_block->power, (float)p, (float)c_min/(float(c) ));
    p = (double)(cfg->pwmmin/100.0 + ((current_block->power/10000.0)*((cfg->pwmmax - cfg->pwmmin)/100.0)));
-   pwm = p;
+}
+
+void laser_on(int state)
+{
+  if(state==LASERON){
+    pwm = p;
+    *laser=LASERON;
+  }else{
+    pwm = cfg->pwmmin/100.0;
+    *laser=LASEROFF;
+  }
 }
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse of Grbl. It is  executed at the rate set with
@@ -332,7 +342,7 @@ static  void st_interrupt (void)
    // this block is a bitmap engraving line, read laser on/off status from buffer
    if ( current_block->options == OPT_BITMAP )
    {
-      *laser =  ! (bitmap[pos_l / 32] & (1 << (pos_l % 32)));
+      laser_on( ! (bitmap[pos_l / 32] & (1 << (pos_l % 32))) );
       counter_l += bitmap_width;
      //  printf("%d %d %d: %d %d %c\r\n", bitmap_width, pos_l, counter_l,  pos_l / 32, pos_l % 32, (*laser ?  '1' : '0' ));
       if (counter_l > 0)
@@ -344,7 +354,7 @@ static  void st_interrupt (void)
    }
    else if ( current_block->options == OPT_BITMAP_TESTRUN )
    {
-      *laser =  LASEROFF;
+      laser_on (LASEROFF);
       counter_l += bitmap_width;
      //  printf("%d %d %d: %d %d %c\r\n", bitmap_width, pos_l, counter_l,  pos_l / 32, pos_l % 32, (*laser ?  '1' : '0' ));
       if (counter_l > 0)
@@ -356,7 +366,7 @@ static  void st_interrupt (void)
    }
    else
    {
-     *laser = ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);
+     laser_on ( current_block->options & OPT_LASER_ON ? LASERON : LASEROFF);
    }
 
     if (current_block->action_type == AT_MOVE)

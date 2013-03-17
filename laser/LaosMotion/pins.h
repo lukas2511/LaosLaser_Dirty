@@ -8,9 +8,9 @@ extern DigitalOut ydir;
 extern DigitalOut ystep;
 extern DigitalOut zdir;
 extern DigitalOut zstep;
-extern DigitalOut estep; 
-extern DigitalOut edir; 
-extern PwmOut pwm;
+extern DigitalOut estep;
+extern DigitalOut edir;
+// extern PwmOut pwm; // dafu? redundant (look at laser definition stuff)
 
 // leds
 extern DigitalOut led1,led2,led3,led4;
@@ -20,7 +20,7 @@ extern DigitalIn xhome;
 extern DigitalIn yhome;
 extern DigitalIn zmin;
 extern DigitalIn zmax;
- 
+
 
 // laser
 extern PwmOut pwm;                // O1: PWM (Yellow)
