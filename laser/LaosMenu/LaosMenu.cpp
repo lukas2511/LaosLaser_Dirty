@@ -250,8 +250,8 @@ void LaosMenu::Handle() {
                 if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
                     case K_OK: screen=SIMULATING; break;
-                    case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
-                    case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
+                    case K_UP: case K_LEFT: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+                    case K_DOWN: case K_RIGHT: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
@@ -272,8 +272,8 @@ void LaosMenu::Handle() {
                 switch ( c ) {
                     case K_OK: removefile(jobname); screen=lastscreen; waitup = 1;
                         break; // INSERT: delete current job
-                    case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
-                    case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
+                    case K_UP: case K_LEFT: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
+                    case K_DOWN: case K_RIGHT: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=lastscreen; waitup = 1; break;
                 }
                 sarg = (char *)&jobname;
