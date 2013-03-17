@@ -28,7 +28,8 @@ typedef enum {
   AT_MOVE,         // move with laser off
   AT_LASER,        // move with laser on
   AT_BITMAP,       // move with laser modulated by bitmap
-  AT_BITMAP_EMULATE,       // EMULATe without laser modulated by bitmap
+  AT_BITMAP_SIMULATE,       // Simulate lasering
+  AT_BITMAP_TESTRUN,       // Test without laser modulated by bitmap
   AT_MOVE_ENDSTOP, // move to endstops
   AT_WAIT,         // Dwell
 } eActionType;
@@ -49,7 +50,7 @@ typedef  struct {
 #define OPT_HOME_Z   16
 #define OPT_HOME_E   32
 #define OPT_BITMAP   64 // bitmap mark a line
-#define OPT_BITMAP_EMULATE   65 // bitmap mark a line
+#define OPT_BITMAP_TESTRUN   65 // bitmap mark a line
 
 
 // This struct is used when buffering the setup for each linear movement "nominal" values are as specified in

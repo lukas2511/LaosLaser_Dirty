@@ -202,7 +202,7 @@ void main_nodisplay() {
     while (!feof(in))
     {
       while (!mot->ready() );
-      mot->write(readint(in));
+      mot->write(readint(in),MODE_RUN);
     }
     fclose(in);
     removefile(name);

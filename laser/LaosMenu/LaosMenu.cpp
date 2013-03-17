@@ -22,11 +22,12 @@
  */
 #include "LaosMenu.h"
 
+
 static const char *menus[] = {
     "STARTUP",     //0
     "MAIN",        //1
     "START JOB",   //2
-    "EMULATE JOB", // 3
+    "TESTRUN JOB", // 3
     "DELETE JOB",  //4
     "HOME",        //5
     "MOVE",        //6
@@ -54,11 +55,11 @@ static const char *screens[] = {
     "RUN:            "
     "$$$$$$$$$$$$$$$$",
 
-#define EMULATE (RUN+1)
-    "EMULATE:        "
+#define TESTRUN (RUN+1)
+    "TESTRUN:        "
     "$$$$$$$$$$$$$$$$",
 
-#define DELETE (EMULATE+1)
+#define DELETE (TESTRUN+1)
     "DELETE:         "
     "$$$$$$$$$$$$$$$$",
 
@@ -115,11 +116,11 @@ static const char *screens[] = {
     "RUNNING...      "
     "                ",
 
-#define EMULATING (RUNNING+1)
-    "EMULATING...    "
+#define TESTING (RUNNING+1)
+    "TESTING...      "
     "                ",
 
-#define BUSY (EMULATING+1)
+#define BUSY (TESTING+1)
     "BUSY: $$$$$$$$$$"
     "[cancel][ok]    ",
 
@@ -256,10 +257,10 @@ void LaosMenu::Handle() {
                 sarg = (char *)&jobname;
                 break;
 
-            case EMULATE: // EMULATE JOB select job to emulate
+            case TESTRUN: // TESTRUN JOB select job to test
                 if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
-                    case K_OK: screen=EMULATING; break;
+                    case K_OK: screen=TESTING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
@@ -445,7 +446,7 @@ void LaosMenu::Handle() {
                                mot->reset();
                         } else {
                             while ((!feof(runfile)) && mot->ready())
-                                if(mot->simulate(readint(runfile))==1){
+                                if(mot->write(readint(runfile),MODE_SIMULATE)==1){
                                     fclose(runfile);
                                     screen=WARN;
                                     break;
@@ -487,7 +488,7 @@ void LaosMenu::Handle() {
                                mot->reset();
                         } else {
                             while ((!feof(runfile)) && mot->ready())
-                                mot->write(readint(runfile));
+                                mot->write(readint(runfile),MODE_RUN);
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;
@@ -500,7 +501,7 @@ void LaosMenu::Handle() {
                 }
                 break;
 
-            case EMULATING: // Screen while emulating
+            case TESTING: // Screen while testing
                 switch ( c ) {
                     /* case K_CANCEL:
                         while (mot->queue());
@@ -517,7 +518,7 @@ void LaosMenu::Handle() {
                                mot->reset();
                         } else {
                             while ((!feof(runfile)) && mot->ready())
-                                mot->emulate(readint(runfile));
+                                mot->write(readint(runfile),MODE_TEST);
                             if (feof(runfile) && mot->ready()) {
                                 fclose(runfile);
                                 runfile = NULL;

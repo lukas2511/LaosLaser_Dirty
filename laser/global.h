@@ -27,6 +27,10 @@
 #include "LaosDisplay.h"
 #include "LaosMotion.h"
 
+#define MODE_TEST 2
+#define MODE_SIMULATE 1
+#define MODE_RUN 0
+
 // Global configuration struct
 class GlobalConfig
 {
