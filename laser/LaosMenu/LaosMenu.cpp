@@ -145,6 +145,10 @@ static const char *screens[] = {
     "LID IS OPEN.    "
     "CLOSE LID!      ",
 
+#define ENDSTOP (LIDOPEN+1)
+    "ENDSTOP REACHED "
+    "PRESS OK TO HOME",
+
 
 };
 
@@ -209,7 +213,7 @@ void LaosMenu::SetScreen(char *msg) {
 
 void LaosMenu::checkCancel() {
     c = dsp->read();
-    if(c==K_CANCEL || !mot->isStart()){
+    if(c==K_CANCEL || !mot->isStart() || mot->endstopReached()){
         fclose(runfile);
         runfile = NULL;
         screen = MAIN;
@@ -259,6 +263,9 @@ void LaosMenu::Handle() {
     }
     if(screen==LIDOPEN && mot->isStart()){
         screen=MAIN;
+    }
+    if(mot->endstopReached()){
+        screen=ENDSTOP;
     }
     int xt, yt, zt, cnt=0, nodisplay = 0;
     extern LaosFileSystem sd;
@@ -385,10 +392,7 @@ void LaosMenu::Handle() {
                     case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
                     case K_OK:
                     case K_ORIGIN:
-                        xoff = x;
-                        yoff = y;
-                        zoff = z;
-                        mot->setOrigin(x,y,z);
+                        mot->setOrigin();
                         screen = lastscreen;
                         waitup = 1;
                         break;
@@ -512,7 +516,6 @@ void LaosMenu::Handle() {
                 }
             break;
 
-
             case RUNNING: // Screen while running
                 switch ( c ) {
                     default:
@@ -550,6 +553,15 @@ void LaosMenu::Handle() {
                 break;
 
             case LIDOPEN:
+                break;
+            case ENDSTOP:
+                switch(c){
+                    case K_OK:
+                        doHoming(1);
+                    case K_CANCEL:
+                        screen=MAIN;
+                        break;
+                }
                 break;
 
             case TESTING: // Screen while testing
