@@ -66,6 +66,8 @@ DigitalIn cover(p19);
 int step=0, command=0;
 int mark_speed = 100; // 100 [mm/sec]
 int counter;
+int steps;
+int interrupt_busy=0;
 
 // next planner action to enqueue
 tActionRequest  action;
@@ -421,22 +423,39 @@ void LaosMotion::overrideSafety(bool enable)
 
 void timerMoveY()
 {
-  ystep = !ystep;
-  counter++;
+  if(!interrupt_busy){
+    interrupt_busy=1;
+    ystep = !ystep;
+    if(ystep){
+      steps++;
+    }
+    counter++;
+    interrupt_busy=0;
+  }
 }
 
 void timerMoveX()
 {
-  xstep = !xstep;
-  counter++;
+  if(!interrupt_busy){
+    interrupt_busy=1;
+    xstep = !xstep;
+    if(xstep){
+      steps++;
+    }
+    counter++;
+    interrupt_busy=0;
+  }
 }
 
 void LaosMotion::manualMove()
 {
   LaosDisplay *dsp;
   int c;
-  int countupto = 250;
+  int countupto = 50;
   int speed;
+  int x,y,z;
+  int args[5];
+  getPosition(&x,&y,&z);
   while(1){
     c=dsp->read();
     counter=0;
@@ -445,7 +464,7 @@ void LaosMotion::manualMove()
         return;
       case K_UP:
       case K_DOWN:
-        speed=cfg->manualspeed*2;
+        speed=cfg->manualspeed*4;
         if(cfg->yscale>0){
           (c==K_UP) ? ydir = 1 : ydir = 0;
         }else{
@@ -459,28 +478,45 @@ void LaosMotion::manualMove()
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
               if(counter>=countupto){
-                speed=speed*1.2;
+                speed=speed*1.25;
                 timer.attach_us(&timerMoveY,speed);
                 counter=0;
               }
             }
             timer.detach();
             ystep=0;
+            if(ydir){
+              y=y+(steps/(cfg->yscale/1000000.0));
+            }else{
+              y=y-(steps/(cfg->yscale/1000000.0));
+            }
+            args[0]=x/1000.0;
+            args[1]=y/1000.0;
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+            steps=0;
+            setPosition(x,y,z);
             break;
           }
           if(counter>=countupto){
             if(cfg->manualspeed<speed){
-              speed=speed/1.05;
+              speed=speed/1.1;
               if(speed<cfg->manualspeed) speed=cfg->manualspeed;
               timer.attach_us(&timerMoveY,speed);
             }
+            args[0]=x/1000.0;
+            if(ydir){
+              args[1]=y/1000.0+(steps/(cfg->yscale/1000));
+            }else{
+              args[1]=y/1000.0-(steps/(cfg->yscale/1000));
+            }
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
             counter=0;
           }
         }
         break;
       case K_LEFT:
       case K_RIGHT:
-        speed=cfg->manualspeed*2;
+        speed=cfg->manualspeed*4;
         if(cfg->xscale>0){
           (c==K_RIGHT) ? xdir = 1 : xdir = 0;
         }else{
@@ -494,21 +530,38 @@ void LaosMotion::manualMove()
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
               if(counter>=countupto){
-                speed=speed*1.2;
+                speed=speed*1.25;
                 timer.attach_us(&timerMoveX,speed);
                 counter=0;
               }
             }
             timer.detach();
             xstep=0;
+            if(xdir){
+              x=x+(steps/(cfg->xscale/1000000.0));
+            }else{
+              x=x-(steps/(cfg->xscale/1000000.0));
+            }
+            args[0]=x/1000.0;
+            args[1]=y/1000.0;
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
+            steps=0;
+            setPosition(x,y,z);
             break;
           }
           if(counter>=countupto){
             if(cfg->manualspeed<speed){
-              speed=speed/1.05;
+              speed=speed/1.1;
               if(speed<cfg->manualspeed) speed=cfg->manualspeed;
               timer.attach_us(&timerMoveX,speed);
             }
+            args[1]=y/1000.0;
+            if(ydir){
+              args[0]=x/1000.0+(steps/(cfg->xscale/1000));
+            }else{
+              args[0]=x/1000.0-(steps/(cfg->xscale/1000));
+            }
+            dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
             counter=0;
           }
         }

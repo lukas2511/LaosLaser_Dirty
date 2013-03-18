@@ -29,14 +29,15 @@ static const char *menus[] = {
     "TESTRUN JOB", // 3
     "DELETE JOB",  //4
     "HOME",        //5
-    "MOVE",        //6
-    "FOCUS",       //7
-    "ORIGIN",      //8
-    "REMOVE ALL JOBS", //9
-    "IP",          //10
-    "REBOOT", //11
-    // "POWER / SPEED",//12
-    // "IO", //13
+    "RETURN",    // 6
+    "MOVE",        //7
+    "FOCUS",       //8
+    "ORIGIN",      //9
+    "REMOVE ALL JOBS", //10
+    "IP",          //11
+    "REBOOT", //12
+    // "POWER / SPEED",//13
+    // "IO", //14
 };
 
 
@@ -67,7 +68,11 @@ static const char *screens[] = {
     "HOME?           "
     "      [ok]      ",
 
-#define MOVE (HOME+1)
+#define RETURN (HOME+1)
+    "RETURN?         "
+    "      [ok]      ",
+
+#define MOVE (RETURN+1)
     "X: +6543210 MOVE"
     "Y: +6543210     ",
 
@@ -131,6 +136,12 @@ static const char *screens[] = {
 #define WARN (PAUSE+1)
     "OUT OF BORDER   "
     "continue?       ",
+
+#define RETURNING (WARN+1)
+    "RETURNING...    "
+    "                ",
+
+
 
 };
 
@@ -321,9 +332,6 @@ void LaosMenu::Handle() {
             case MOVE: // pos xy
                 mot->manualMove();
                 screen=MAIN;
-
-                args[0]=x-xoff;
-                args[1]=y-yoff;
                 break;
 
             case FOCUS: // focus
@@ -351,6 +359,13 @@ void LaosMenu::Handle() {
             case HOME:// home
                 switch ( c ) {
                     case K_OK: screen=HOMING; break;
+                    case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
+                }
+                break;
+
+            case RETURN:// home
+                switch ( c ) {
+                    case K_OK: screen=RETURNING; break;
                     case K_CANCEL: screen=MAIN; menu=MAIN; waitup=1; break;
                 }
                 break;
@@ -435,6 +450,14 @@ void LaosMenu::Handle() {
 */
             case HOMING: // Homing screen
                 doHoming(1);
+                screen=MAIN;
+                break;
+
+            case RETURNING:
+                doHoming(0);
+                if(mot->isHome){
+                    mot->moveTo(cfg->xrest, cfg->yrest, cfg->zrest);
+                }
                 screen=MAIN;
                 break;
 
