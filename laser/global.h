@@ -43,6 +43,7 @@ public:
   int cleandir; // remove files from SD at startup
   int i2cbaud; // i2cBaudrate
   int xmax, ymax, zmax, emax; // max values
+  int xhasendstop,yhasendstop; // x/y has endstop
   int xmin, ymin, zmin, emin; // min values
   int xpol, ypol, zpol, epol; // polarity for the home switches
   int xinv, yinv, zinv, einv; // invert signal polarity for step/dir

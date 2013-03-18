@@ -41,6 +41,9 @@ DigitalIn yhome(p17);
 DigitalIn zmin(p15);
 DigitalIn zmax(p16);
 
+DigitalIn xendstop(p6);
+DigitalIn yendstop(p21);
+
 // motors
 DigitalOut enable(p7);
 DigitalOut xdir(p23);
@@ -54,8 +57,10 @@ DigitalOut estep(p29); // NOK: CAN, (TODO)
 
 // laser
 PwmOut pwm(p22);                // O1: PWM (Yellow)
-DigitalOut laser_enable(p21);   // O2: enable laser
-DigitalOut o3(p6);              // 03: NC
+
+// DigitalOut laser_enable(p21);   // O2: enable laser
+// DigitalOut o3(p6);              // 03: NC
+
 DigitalOut *laser = NULL;           // O4: (p5) LaserON (White)
 
 // Analog in/out (cover sensor) + NC
@@ -384,6 +389,8 @@ bool LaosMotion::endstopReached()
 {
   if(xhome==cfg->xpol) return true;
   if(yhome==cfg->ypol) return true;
+  if(cfg->xhasendstop && xendstop==cfg->xpol) return true;
+  if(cfg->yhasendstop && yendstop==cfg->ypol) return true;
   return false;
 }
 

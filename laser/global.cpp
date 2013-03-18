@@ -113,6 +113,9 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("z.pol", &zpol, 0);
     cfg.Value("e.pol", &epol, 0);
 
+    cfg.Value("x.endstop", &xhasendstop, 0);
+    cfg.Value("y.endstop", &yhasendstop, 0);
+
     // Scaling [steps/meter]
     cfg.Value("x.scale", &xscale, 200000);
     cfg.Value("y.scale", &yscale, 200000);
