@@ -78,7 +78,7 @@ private:
   int canceled=0;
 
   // menu states
-  int screen, prevscreen, lastscreen;
+  int screen, prevscreen, lastscreen, nextscreen;
   unsigned char menu, ipfield, iofield;
   unsigned char powerfield, power[4];
   LaosDisplay *dsp;

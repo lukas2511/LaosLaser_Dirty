@@ -497,9 +497,9 @@ void LaosMotion::manualMove()
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
               if(counter>=countupto){
-                speed=speed*1.25;
-                timer.attach_us(&timerMoveY,speed);
+                speed=speed*1.05;
                 counter=0;
+                timer.attach_us(&timerMoveY,speed);
               }
             }
             timer.detach();
@@ -549,9 +549,9 @@ void LaosMotion::manualMove()
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
               if(counter>=countupto){
-                speed=speed*1.25;
-                timer.attach_us(&timerMoveX,speed);
+                speed=speed*1.05;
                 counter=0;
+                timer.attach_us(&timerMoveX,speed);
               }
             }
             timer.detach();

@@ -316,7 +316,7 @@ void LaosMenu::Handle() {
             case RUN: // START JOB select job to run
                 if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
-                    case K_OK: screen=SIMULATING; break;
+                    case K_OK: nextscreen=RUNNING; screen=SIMULATING; break;
                     case K_UP: case K_LEFT: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_RIGHT: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
@@ -327,7 +327,7 @@ void LaosMenu::Handle() {
             case TESTRUN: // TESTRUN JOB select job to test
                 if (strlen(jobname) == 0) getprevjob(jobname);
                 switch ( c ) {
-                    case K_OK: screen=TESTING; break;
+                    case K_OK: nextscreen=TESTING; screen=SIMULATING; break;
                     case K_UP: case K_FUP: getprevjob(jobname); waitup = 1; break; // next job
                     case K_DOWN: case K_FDOWN: getnextjob(jobname); waitup = 1; break;// prev job
                     case K_CANCEL: screen=1; waitup = 1; break;
@@ -490,6 +490,7 @@ void LaosMenu::Handle() {
                                 checkCancel();
                                 if(mot->write(readint(runfile),MODE_SIMULATE)==1){
                                     fclose(runfile);
+                                    runfile=NULL;
                                     screen=WARN;
                                     break;
                                 }
@@ -510,7 +511,7 @@ void LaosMenu::Handle() {
 
             case WARN:
                 switch( c ) {
-                    case K_OK: screen=RUNNING; waitup=1; break;
+                    case K_OK: screen=nextscreen; waitup=1; break;
                     case K_CANCEL: screen=MAIN; runfile=NULL; waitup=1; break;
                     default: break;
                 }
