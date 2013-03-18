@@ -26,6 +26,7 @@
 #define _LAOSMOTION_H_
 #include "global.h"
 
+bool endstopReachedTest();
 
 // the state of the laser OUTPUT
 #define LASEROFF 1
@@ -60,6 +61,7 @@ public:
   void overrideSafety(bool enable);
   void clearBuffer();
   bool endstopReached();
+  bool clearEndstop();
 private:
 
 };

@@ -33,6 +33,8 @@
 // status leds
 extern DigitalOut led1,led2,led3,led4;
 
+bool endstopreached=false;
+
 static Ticker timer; // the periodic timer used to step
 
 // Inputs;
@@ -109,8 +111,10 @@ LaosMotion::LaosMotion()
 
   mark_speed = cfg->speed;
   //start.mode(PullUp);
-  xhome.mode(PullUp);
-  yhome.mode(PullUp);
+ // xhome.mode(PullUp);
+ // yhome.mode(PullUp);
+ // xendstop.mode(PullUp);
+//  yendstop.mode(PullUp);
   isHome = false;
   plan_init();
   st_init();
@@ -385,7 +389,7 @@ bool LaosMotion::isStart()
 /**
 *** Return true if endstop pressed
 **/
-bool LaosMotion::endstopReached()
+bool endstopReachedTest()
 {
   if(xhome==cfg->xpol) return true;
   if(yhome==cfg->ypol) return true;
@@ -394,6 +398,14 @@ bool LaosMotion::endstopReached()
   return false;
 }
 
+bool LaosMotion::endstopReached(){
+  if(endstopreached) return true;
+  return endstopReachedTest();
+}
+
+bool LaosMotion::clearEndstop(){
+  endstopreached=false;
+}
 
 /**
 *** Hard set the absolute position
@@ -448,6 +460,7 @@ void timerMoveY()
   if(!interrupt_busy){
     interrupt_busy=1;
     ystep = !ystep;
+    if(endstopReachedTest()) endstopreached=true;
     if(ystep){
       steps++;
     }
@@ -461,6 +474,7 @@ void timerMoveX()
   if(!interrupt_busy){
     interrupt_busy=1;
     xstep = !xstep;
+    if(endstopReachedTest()) endstopreached=true;
     if(xstep){
       steps++;
     }
@@ -473,6 +487,7 @@ void LaosMotion::manualMove()
 {
   LaosDisplay *dsp;
   int c;
+  endstopreached=false;
   int countupto = 50;
   int speed;
   int x,y,z;
@@ -498,8 +513,12 @@ void LaosMotion::manualMove()
         }
         timer.attach_us(&timerMoveY,speed);
         while(1){
+          if(endstopreached){
+            timer.detach();
+            return;
+          }
           c = dsp->read();
-          if((c!=K_UP && c!=K_DOWN) || cover==0 || endstopReached()){
+          if((c!=K_UP && c!=K_DOWN) || cover==0){
             counter=0;
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
@@ -550,8 +569,12 @@ void LaosMotion::manualMove()
         }
         timer.attach_us(&timerMoveX,speed);
         while(1){
+          if(endstopreached){
+            timer.detach();
+            return;
+          }
           c = dsp->read();
-          if((c!=K_LEFT && c!=K_RIGHT) || cover==0 || endstopReached()){
+          if((c!=K_LEFT && c!=K_RIGHT) || cover==0){
             counter=0;
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...

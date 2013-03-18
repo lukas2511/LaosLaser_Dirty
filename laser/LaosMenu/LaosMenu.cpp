@@ -558,8 +558,10 @@ void LaosMenu::Handle() {
             case ENDSTOP:
                 switch(c){
                     case K_OK:
+                        mot->clearEndstop();
                         doHoming(1);
                     case K_CANCEL:
+                        mot->clearEndstop();
                         screen=MAIN;
                         break;
                 }
