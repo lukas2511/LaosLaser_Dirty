@@ -52,13 +52,14 @@ public:
   bool isHome; // system is homed
   void setPosition(int x, int y, int z); // set the absolute position [micron]
   void getPosition(int *x, int *y, int *z); // get actual absolute position [micron] (current position of the motors)
-  void setOrigin(int x, int y, int z); // set the origin to this absolute position [micron]
+  void setOrigin(); // set the origin to this absolute position [micron]
   void moveTo(int x, int y, int z); // move (jog) to a specific position [microns]
   void moveTo(int x, int y, int z, int speed); // move (jog) to a specific position [microns]
   void manualMove(); // manual move from menu
   int queue(); // queued items
   void overrideSafety(bool enable);
   void clearBuffer();
+  bool endstopReached();
 private:
 
 };

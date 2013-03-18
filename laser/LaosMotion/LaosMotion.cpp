@@ -157,7 +157,7 @@ LaosMotion::~LaosMotion()
 void LaosMotion::reset()
 {
   step = command = xstep = xdir = ystep = ydir = zstep = zdir = 0;
-  ofsx = ofsy = ofsz = 0;
+//  ofsx = ofsy = ofsz = 0;
   enable = cfg->enable;
   laser_on(LASEROFF);
   cover.mode(PullUp);
@@ -197,9 +197,9 @@ void LaosMotion::clearBuffer()
 **/
 void LaosMotion::moveTo(int x, int y, int z)
 {
-   action.target.x = ofsx + x/1000.0;
-   action.target.y = ofsy + y/1000.0;
-   action.target.z = ofsz + z/1000.0;
+   action.target.x = ofsx/1000.0 + x/1000.0;
+   action.target.y = ofsy/1000.0 + y/1000.0;
+   action.target.z = ofsz/1000.0 + z/1000.0;
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  60.0 * cfg->speed;
    plan_buffer_line(&action);
@@ -211,9 +211,9 @@ void LaosMotion::moveTo(int x, int y, int z)
 **/
 void LaosMotion::moveTo(int x, int y, int z, int speed)
 {
-   action.target.x = ofsx + x/1000.0;
-   action.target.y = ofsy + y/1000.0;
-   action.target.z = ofsz + z/1000.0;
+   action.target.x = ofsx/1000.0 + x/1000.0;
+   action.target.y = ofsy/1000.0 + y/1000.0;
+   action.target.z = ofsz/1000.0 + z/1000.0;
    action.ActionType = AT_MOVE;
    action.target.feed_rate =  (speed * 60.0 * cfg->speed) / 100;
    plan_buffer_line(&action);
@@ -243,12 +243,15 @@ int LaosMotion::write(int i,int mode)
             switch ( step )
             {
               case 1:
-                action.target.x = i/1000.0;
+                action.target.x = ofsx/1000.0+i/1000.0;
+                printf("ofsx: %d\r\n",ofsx);
+                printf("i: %d\r\n",i);
+                printf("action.target.x: %d\r\n",action.target.x);
                 break;
               case 2:
-                action.target.y = i/1000.0;;
+                action.target.y = ofsy/1000.0+i/1000.0;;
                 step=0;
-                action.target.z = 0;
+                action.target.z = ofsz;
                 action.param = power;
                 if(mode==MODE_TEST){
                   action.ActionType = AT_MOVE;
@@ -277,7 +280,7 @@ int LaosMotion::write(int i,int mode)
             {
               case 1:
                 step = 0;
-                z = action.target.z = i/1000.0;;
+                z = action.target.z = ofsz/1000.0+i/1000.0;
                 action.param = power;
                 action.ActionType =  AT_MOVE;
                 action.target.feed_rate =  60.0 * cfg->speed;
@@ -374,6 +377,16 @@ bool LaosMotion::isStart()
   return cover;
 }
 
+/**
+*** Return true if endstop pressed
+**/
+bool LaosMotion::endstopReached()
+{
+  if(xhome==cfg->xpol) return true;
+  if(yhome==cfg->ypol) return true;
+  return false;
+}
+
 
 /**
 *** Hard set the absolute position
@@ -404,11 +417,13 @@ void LaosMotion::getPosition(int *x, int *y, int *z)
 *** set to (0,0,0) to reset the orgin back to its original position.
 *** Note: Make sure you only call this at stand-still (motion queue is empty), otherwise strange things may happen
 **/
-void LaosMotion::setOrigin(int x, int y, int z)
+void LaosMotion::setOrigin()
 {
-  ofsx = x;
-  ofsy = y;
-  ofsz = z;
+  float xx,yy,zz;
+  plan_get_current_position_xyz(&xx, &yy, &zz);
+  ofsx = xx * 1000;
+  ofsy = yy * 1000;
+  ofsz = zz * 1000;
 }
 
 
@@ -456,8 +471,11 @@ void LaosMotion::manualMove()
   int x,y,z;
   int args[5];
   getPosition(&x,&y,&z);
+  args[0]=x/1000.0;
+  args[1]=y/1000.0;
+  dsp->ShowScreen("X: +6543210 mm  " "Y: +6543210 mm  ", args, NULL);
   while(1){
-    if(cover==0) return;
+    if(cover==0 || endstopReached()) return;
     c=dsp->read();
     counter=0;
     switch(c){
@@ -474,7 +492,7 @@ void LaosMotion::manualMove()
         timer.attach_us(&timerMoveY,speed);
         while(1){
           c = dsp->read();
-          if((c!=K_UP && c!=K_DOWN) || cover==0){
+          if((c!=K_UP && c!=K_DOWN) || cover==0 || endstopReached()){
             counter=0;
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
@@ -526,7 +544,7 @@ void LaosMotion::manualMove()
         timer.attach_us(&timerMoveX,speed);
         while(1){
           c = dsp->read();
-          if((c!=K_LEFT && c!=K_RIGHT) || cover==0){
+          if((c!=K_LEFT && c!=K_RIGHT) || cover==0 || endstopReached()){
             counter=0;
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
@@ -581,6 +599,7 @@ void LaosMotion::home(int x, int y, int z)
   int canceled = 0;
   int c = 0;
   int counter = 0;
+  ofsx=ofsy=ofsz=0;
   int countupto = (cfg->xscale/1000)*5; // check cancel button state every 5mm (maybe)
   printf("Homing %d,%d, %d with speed %d\r\n", x, y, z, cfg->homespeed);
   xdir = cfg->xhomedir;
