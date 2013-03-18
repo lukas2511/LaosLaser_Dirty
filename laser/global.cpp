@@ -142,7 +142,8 @@ GlobalConfig::GlobalConfig(char *filename)
     cfg.Value("e.min", &emin, 0);
 
     // motion settings: enable output state
-    cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [mm/sec]
+    cfg.Value("motion.homespeed", &homespeed, 10); // speed during homing [usec/step / 2]
+    cfg.Value("motion.manualspeed", &manualspeed, 10); // speed during manual movement [usec/step / 2]
     cfg.Value("motion.speed", &speed, 100);   // max speed [mm/sec]
     cfg.Value("motion.accel", &accel, 100); // accelleration [mm/sec2]
     cfg.Value("motion.enable", &enable, 0); // enable output polarity [0/1]

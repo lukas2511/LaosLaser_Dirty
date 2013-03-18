@@ -445,7 +445,7 @@ void LaosMotion::manualMove()
         return;
       case K_UP:
       case K_DOWN:
-        speed=cfg->homespeed*2;
+        speed=cfg->manualspeed*2;
         if(cfg->yscale>0){
           (c==K_UP) ? ydir = 0 : ydir = 1;
         }else{
@@ -455,15 +455,23 @@ void LaosMotion::manualMove()
         while(1){
           c = dsp->read();
           if(c!=K_UP && c!=K_DOWN){
+            counter=0;
+            while(speed<cfg->manualspeed*2){
+              wait_ms(1);
+              if(counter>=countupto){
+                speed=speed*1.2;
+                timer.attach_us(&timerMoveY,speed);
+                counter=0;
+              }
+            }
             timer.detach();
             ystep=0;
             break;
           }
           if(counter>=countupto){
-            if(cfg->homespeed<speed){
+            if(cfg->manualspeed<speed){
               speed=speed/1.05;
-              if(speed<cfg->homespeed) speed=cfg->homespeed;
-              printf("%d\r\n",speed);
+              if(speed<cfg->manualspeed) speed=cfg->manualspeed;
               timer.attach_us(&timerMoveY,speed);
             }
             counter=0;
@@ -472,7 +480,7 @@ void LaosMotion::manualMove()
         break;
       case K_LEFT:
       case K_RIGHT:
-        speed=cfg->homespeed*2;
+        speed=cfg->manualspeed*2;
         if(cfg->xscale>0){
           (c==K_RIGHT) ? xdir = 1 : xdir = 0;
         }else{
@@ -482,14 +490,23 @@ void LaosMotion::manualMove()
         while(1){
           c = dsp->read();
           if(c!=K_LEFT && c!=K_RIGHT){
+            counter=0;
+            while(speed<cfg->manualspeed*2){
+              wait_ms(1);
+              if(counter>=countupto){
+                speed=speed*1.2;
+                timer.attach_us(&timerMoveX,speed);
+                counter=0;
+              }
+            }
             timer.detach();
             xstep=0;
             break;
           }
           if(counter>=countupto){
-            if(cfg->homespeed<speed){
+            if(cfg->manualspeed<speed){
               speed=speed/1.05;
-              if(speed<cfg->homespeed) speed=cfg->homespeed;
+              if(speed<cfg->manualspeed) speed=cfg->manualspeed;
               timer.attach_us(&timerMoveX,speed);
             }
             counter=0;

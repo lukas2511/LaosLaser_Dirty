@@ -49,7 +49,8 @@ public:
   int xhome, yhome, zhome, ehome; // home position
   int xrest, yrest, zrest, erest; // rest positon (moveto after job)
   int xhomedir, yhomedir, zhomedir, ehomedir;
-  int homespeed; // speed used for homing [usec]
+  int homespeed; // speed used for homing [usec/step / 2]
+  int manualspeed; // speed used for homing [usec/step / 2]
   int speed, xspeed, yspeed, zspeed, espeed; // Maximum linear speed and max speed per axis [mm/sec]
   int accel; // defaul accelletaion [mm/sec2]
   int tolerance; // corner tolerance [micrometer]
