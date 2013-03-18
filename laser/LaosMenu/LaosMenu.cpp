@@ -141,6 +141,9 @@ static const char *screens[] = {
     "RETURNING...    "
     "                ",
 
+#define LIDOPEN (RETURNING+1)
+    "LID IS OPEN.    "
+    "CLOSE LID!      ",
 
 
 };
@@ -159,7 +162,7 @@ LaosMenu::LaosMenu(LaosDisplay *display) {
     x=y=z=0;
     xoff=yoff=zoff=0;
     screen=prevscreen=lastscreen=speed=0;
-    menu=2;
+    menu=1;
     strcpy(jobname, "");
     dsp = display;
     if ( dsp == NULL ) dsp = new LaosDisplay();
@@ -206,7 +209,7 @@ void LaosMenu::SetScreen(char *msg) {
 
 void LaosMenu::checkCancel() {
     c = dsp->read();
-    if(c==K_CANCEL){
+    if(c==K_CANCEL || !mot->isStart()){
         fclose(runfile);
         runfile = NULL;
         screen = MAIN;
@@ -250,6 +253,13 @@ void LaosMenu::doHoming(int force){
 *** something changed
 **/
 void LaosMenu::Handle() {
+    if (!mot->isStart()){
+        mot->isHome=false;
+        screen=LIDOPEN;
+    }
+    if(screen==LIDOPEN && mot->isStart()){
+        screen=MAIN;
+    }
     int xt, yt, zt, cnt=0, nodisplay = 0;
     extern LaosFileSystem sd;
     static int count=0;
@@ -537,6 +547,9 @@ void LaosMenu::Handle() {
                             screen=MAIN;
                         }
                 }
+                break;
+
+            case LIDOPEN:
                 break;
 
             case TESTING: // Screen while testing

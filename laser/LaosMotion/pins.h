@@ -21,7 +21,6 @@ extern DigitalIn yhome;
 extern DigitalIn zmin;
 extern DigitalIn zmax;
 
-
 // laser
 extern PwmOut pwm;                // O1: PWM (Yellow)
 extern DigitalOut laser_enable;   // O2: enable laser

@@ -457,6 +457,7 @@ void LaosMotion::manualMove()
   int args[5];
   getPosition(&x,&y,&z);
   while(1){
+    if(cover==0) return;
     c=dsp->read();
     counter=0;
     switch(c){
@@ -473,7 +474,7 @@ void LaosMotion::manualMove()
         timer.attach_us(&timerMoveY,speed);
         while(1){
           c = dsp->read();
-          if(c!=K_UP && c!=K_DOWN){
+          if((c!=K_UP && c!=K_DOWN) || cover==0){
             counter=0;
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
@@ -525,7 +526,7 @@ void LaosMotion::manualMove()
         timer.attach_us(&timerMoveX,speed);
         while(1){
           c = dsp->read();
-          if(c!=K_LEFT && c!=K_RIGHT){
+          if((c!=K_LEFT && c!=K_RIGHT) || cover==0){
             counter=0;
             while(speed<cfg->manualspeed*2){
               wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
@@ -592,7 +593,7 @@ void LaosMotion::home(int x, int y, int z)
     while ((zmin ^ cfg->zpol) && (zmax ^ cfg->zpol) && !canceled) {
       if(counter==countupto){
         c = dsp->read();
-        if(c==K_CANCEL){
+        if(c==K_CANCEL || cover==0){
           isHome = false;
           return;
         }
@@ -612,7 +613,7 @@ void LaosMotion::home(int x, int y, int z)
   {
     if(counter==countupto){
       c = dsp->read();
-      if(c==K_CANCEL){
+      if(c==K_CANCEL || cover==0){
         isHome = false;
         return;
       }
