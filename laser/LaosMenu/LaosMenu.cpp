@@ -148,7 +148,7 @@ LaosMenu::LaosMenu(LaosDisplay *display) {
     x=y=z=0;
     xoff=yoff=zoff=0;
     screen=prevscreen=lastscreen=speed=0;
-    menu=1;
+    menu=2;
     strcpy(jobname, "");
     dsp = display;
     if ( dsp == NULL ) dsp = new LaosDisplay();
@@ -319,25 +319,9 @@ void LaosMenu::Handle() {
                 break;
 
             case MOVE: // pos xy
-                mot->getPosition(&x, &y, &z);
-                xt = x; yt= y;
-                switch ( c ) {
-                    case K_DOWN: y+=100*speed; break;
-                    case K_UP: y-=100*speed;  break;
-                    case K_LEFT: x-=100*speed; break;
-                    case K_RIGHT: x+=100*speed;  break;
-                    case K_OK: case K_CANCEL: screen=MAIN; waitup=1; break;
-                    case K_FUP: screen=FOCUS; break;
-                    case K_FDOWN: screen=FOCUS; break;
-                    case K_ORIGIN: screen=ORIGIN; break;
-                }
-                if  ((mot->queue() < 1) && ( (x!=xt) || (y != yt) )) {
-                    mot->moveTo(x, y, z, speed/2);
-					printf("Move: %d %d %d %d\r\n", x,y,z, speed);
-                } else {
-                    // if (! mot->ready())
-                    // printf("Buffer vol\r\n");
-                }
+                mot->manualMove();
+                screen=MAIN;
+
                 args[0]=x-xoff;
                 args[1]=y-yoff;
                 break;

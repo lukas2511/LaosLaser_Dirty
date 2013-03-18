@@ -84,6 +84,7 @@ private:
   LaosDisplay *dsp;
   int x,y,z;
   int xoff, yoff, zoff;
+  int oldaccel;
   FILE *runfile;
 
 };

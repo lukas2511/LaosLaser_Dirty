@@ -33,6 +33,8 @@
 // status leds
 extern DigitalOut led1,led2,led3,led4;
 
+static Ticker timer; // the periodic timer used to step
+
 // Inputs;
 DigitalIn xhome(p8);
 DigitalIn yhome(p17);
@@ -63,6 +65,7 @@ DigitalIn cover(p19);
 // globals
 int step=0, command=0;
 int mark_speed = 100; // 100 [mm/sec]
+int counter;
 
 // next planner action to enqueue
 tActionRequest  action;
@@ -416,6 +419,86 @@ void LaosMotion::overrideSafety(bool enable)
   overrider=!enable;
 }
 
+void timerMoveY()
+{
+  ystep = !ystep;
+  counter++;
+}
+
+void timerMoveX()
+{
+  xstep = !xstep;
+  counter++;
+}
+
+void LaosMotion::manualMove()
+{
+  LaosDisplay *dsp;
+  int c;
+  int countupto = 250;
+  int speed;
+  while(1){
+    c=dsp->read();
+    counter=0;
+    switch(c){
+      case K_CANCEL:
+        return;
+      case K_UP:
+      case K_DOWN:
+        speed=cfg->homespeed*2;
+        if(cfg->yscale>0){
+          (c==K_UP) ? ydir = 0 : ydir = 1;
+        }else{
+          (c==K_UP) ? ydir = 1 : ydir = 0;
+        }
+        timer.attach_us(&timerMoveY,speed);
+        while(1){
+          c = dsp->read();
+          if(c!=K_UP && c!=K_DOWN){
+            timer.detach();
+            ystep=0;
+            break;
+          }
+          if(counter>=countupto){
+            if(cfg->homespeed<speed){
+              speed=speed/1.05;
+              if(speed<cfg->homespeed) speed=cfg->homespeed;
+              printf("%d\r\n",speed);
+              timer.attach_us(&timerMoveY,speed);
+            }
+            counter=0;
+          }
+        }
+        break;
+      case K_LEFT:
+      case K_RIGHT:
+        speed=cfg->homespeed*2;
+        if(cfg->xscale>0){
+          (c==K_RIGHT) ? xdir = 1 : xdir = 0;
+        }else{
+          (c==K_RIGHT) ? xdir = 0 : xdir = 1;
+        }
+        timer.attach_us(&timerMoveX,speed);
+        while(1){
+          c = dsp->read();
+          if(c!=K_LEFT && c!=K_RIGHT){
+            timer.detach();
+            xstep=0;
+            break;
+          }
+          if(counter>=countupto){
+            if(cfg->homespeed<speed){
+              speed=speed/1.05;
+              if(speed<cfg->homespeed) speed=cfg->homespeed;
+              timer.attach_us(&timerMoveX,speed);
+            }
+            counter=0;
+          }
+        }
+        break;
+    }
+  }
+}
 
 /**
 *** Home the axis, stop when both home switches are pressed
