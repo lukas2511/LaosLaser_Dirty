@@ -447,9 +447,9 @@ void LaosMotion::manualMove()
       case K_DOWN:
         speed=cfg->manualspeed*2;
         if(cfg->yscale>0){
-          (c==K_UP) ? ydir = 0 : ydir = 1;
-        }else{
           (c==K_UP) ? ydir = 1 : ydir = 0;
+        }else{
+          (c==K_UP) ? ydir = 0 : ydir = 1;
         }
         timer.attach_us(&timerMoveY,speed);
         while(1){
@@ -457,7 +457,7 @@ void LaosMotion::manualMove()
           if(c!=K_UP && c!=K_DOWN){
             counter=0;
             while(speed<cfg->manualspeed*2){
-              wait_ms(1);
+              wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
               if(counter>=countupto){
                 speed=speed*1.2;
                 timer.attach_us(&timerMoveY,speed);
@@ -492,7 +492,7 @@ void LaosMotion::manualMove()
           if(c!=K_LEFT && c!=K_RIGHT){
             counter=0;
             while(speed<cfg->manualspeed*2){
-              wait_ms(1);
+              wait_ms(1); // this "fixes" a (timing?) bug.... doesn't work without this...
               if(counter>=countupto){
                 speed=speed*1.2;
                 timer.attach_us(&timerMoveX,speed);
