@@ -115,7 +115,7 @@ static const char *screens[] = {
 
 #define SIMULATING (HOMING+1)
     "SIMULATING...   "
-    "                ",
+    "[cancel]  [skip]",
 
 #define RUNNING (SIMULATING+1)
     "RUNNING...      "
@@ -223,7 +223,7 @@ void LaosMenu::checkCancel() {
         mot->isHome=false;
         printf("cancel pressed!\r\n");
     }
-    if(c==K_OK){
+    if(c==K_FUP){
         skipped=1;
     }
 }
