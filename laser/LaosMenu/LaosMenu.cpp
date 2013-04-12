@@ -223,6 +223,9 @@ void LaosMenu::checkCancel() {
         mot->isHome=false;
         printf("cancel pressed!\r\n");
     }
+    if(c==K_OK){
+        skipped=1;
+    }
 }
 
 void LaosMenu::doHoming(int force){
@@ -486,7 +489,8 @@ void LaosMenu::Handle() {
                                mot->reset();
                         } else {
                             canceled=0;
-                            while (!canceled && ((!feof(runfile)) && mot->ready())){
+                            skipped=0;
+                            while (!skipped && !canceled && ((!feof(runfile)) && mot->ready())){
                                 checkCancel();
                                 if(mot->write(readint(runfile),MODE_SIMULATE)==1){
                                     fclose(runfile);
@@ -495,7 +499,7 @@ void LaosMenu::Handle() {
                                     break;
                                 }
                             }
-                            while(!canceled && mot->queue()>0){
+                            while(!skipped && !canceled && mot->queue()>0){
                                 checkCancel();
                             }
                             if (!canceled && feof(runfile) && mot->ready() && screen!=WARN) {

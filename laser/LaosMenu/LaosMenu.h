@@ -76,6 +76,7 @@ private:
   int c;
 
   int canceled=0;
+  int skipped=0;
 
   // menu states
   int screen, prevscreen, lastscreen, nextscreen;
