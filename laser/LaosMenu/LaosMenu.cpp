@@ -505,7 +505,7 @@ void LaosMenu::Handle() {
                             if (!canceled && feof(runfile) && mot->ready() && screen!=WARN) {
                                 fclose(runfile);
                                 runfile = NULL;
-                                screen=RUNNING;
+                                screen=nextscreen;
                             } else {
                                 nodisplay = 1;
                             }
